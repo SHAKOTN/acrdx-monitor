@@ -7,7 +7,12 @@ status "ok", and an error into a "reading" with status "failed", an error text
 (RPC URLs redacted) and null values. Format: ../data/contract.json.
 """
 
+import os
+
 from web3 import Web3
+
+from checker.constants import CHAIN_DATA
+from checker.constants import RPC_TIMEOUT_SECONDS
 
 
 def main_collector(timestamp: int | None = None) -> str:
@@ -65,11 +70,18 @@ def _read_chronicle_price_per_share(
 
 def _create_web3_transport(chain_id: int) -> Web3:
     """
-    Create a Web3 transport object.
+    Create a Web3 object for the chain. The RPC URL comes from the environment variable
+    named in constants.CHAIN_DATA[chain_id]["rpc_env"].
+    Raises ValueError if the chain is unknown or the variable is missing;
+    main_collector turns that into a "failed" reading. The URL is never put in a message.
     """
-    # TODO: Install the Web3 provider and return it as a Web3 object based on the chain_id
-    # Use the environment variable named in constants.CHAIN_DATA[chain_id]["rpc_env"]
-    # Raises if the variable is missing; main_collector turns that into a "failed" reading.
+    if chain_id not in CHAIN_DATA:
+        raise ValueError(f"Unknown chain id {chain_id}")
+    rpc_env = CHAIN_DATA[chain_id]["rpc_env"]
+    rpc_url = os.getenv(rpc_env)
+    if not rpc_url:
+        raise ValueError(f"Environment variable {rpc_env} is not set")
+    return Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": RPC_TIMEOUT_SECONDS}))
 
 def _find_adjacent_block(timestamp: int, chain_id: int) -> int:
     """

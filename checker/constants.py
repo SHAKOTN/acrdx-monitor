@@ -15,6 +15,9 @@ SPOKE_ADDRESS = "0xEC3582fcDc34078a4B7a8c75a5a3AE46f48525aB"
 
 PRICE_DECIMALS = 18
 
+# Seconds before an RPC request gives up. A timeout gives a "failed" reading.
+RPC_TIMEOUT_SECONDS = 20
+
 CHAIN_DATA = {
     ETHEREUM: {
         "name": "ethereum",
