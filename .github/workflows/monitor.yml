@@ -5,7 +5,7 @@ name: monitor
 # when the last run is older than 3 hours.
 on:
   schedule:
-    - cron: "0 * * * *"
+    - cron: "17 * * * *"
   workflow_dispatch:
   push:
     branches: [main]
