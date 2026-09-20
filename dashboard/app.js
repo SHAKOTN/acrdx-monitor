@@ -175,7 +175,7 @@ function renderCheck(check, shown, history, when) {
   let body = `<p class="value">—</p><div class="meter"></div><p class="explain">${escapeHtml(verdict.reason)}</p>`;
   if (verdict.result !== "no_verdict") {
     const share = Math.min(100, verdict[check.value] / verdict[check.limit] * 100);
-    body = `<p class="value">${verdict[check.value]} <small>${check.unit} of ${verdict[check.limit]} ${check.unit}</small></p>`
+    body = `<p class="value">${verdict[check.value]}${check.unit} <small>of ${verdict[check.limit]} ${check.unit}</small></p>`
       + `<div class="meter"><i style="width:${share}%"></i></div>`
       + `<p class="explain">${check.explain(verdict)}</p>`;
   }

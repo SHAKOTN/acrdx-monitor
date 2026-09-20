@@ -98,7 +98,7 @@ h2 { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
 .explain strong { color: var(--text); font-weight: 500; }
 
 .chart { display: block; width: 100%; height: auto; margin-top: 14px; overflow: visible; }
-.chart .line { fill: none; stroke: var(--lavender); stroke-width: 1.5; }
+.chart .line { fill: none; stroke: var(--lavender); stroke-width: 2; stroke-linejoin: round; }
 .chart .over { stroke: var(--alert); }
 .chart .limit { stroke: var(--text-soft); stroke-width: 1; stroke-dasharray: 4 4; }
 .chart .failed { stroke: var(--no-verdict); stroke-width: 2; }
