@@ -1,0 +1,12 @@
+services:
+  checker:
+    build: .
+    volumes:
+      - ./checker:/app/checker
+      - ./tests:/app/tests
+      - ./data:/app/data
+    env_file:
+      - path: .env
+        required: false
+
+  # dashboard service will be added later
