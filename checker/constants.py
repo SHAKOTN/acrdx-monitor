@@ -15,6 +15,35 @@ SPOKE_ADDRESS = "0xEC3582fcDc34078a4B7a8c75a5a3AE46f48525aB"
 
 PRICE_DECIMALS = 18
 
+# The two Spoke read functions that the checker calls
+SPOKE_ABI = [
+    {
+        "name": "pricePoolPerShare",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [
+            {"name": "poolId", "type": "uint64"},
+            {"name": "scId", "type": "bytes16"},
+            {"name": "checkValidity", "type": "bool"},
+        ],
+        "outputs": [{"name": "price", "type": "uint128"}],
+    },
+    {
+        "name": "markersPricePoolPerShare",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [
+            {"name": "poolId", "type": "uint64"},
+            {"name": "scId", "type": "bytes16"},
+        ],
+        "outputs": [
+            {"name": "computedAt", "type": "uint64"},
+            {"name": "maxAge", "type": "uint64"},
+            {"name": "validUntil", "type": "uint64"},
+        ],
+    },
+]
+
 # Seconds before an RPC request gives up. A timeout gives a "failed" reading.
 RPC_TIMEOUT_SECONDS = 20
 

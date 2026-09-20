@@ -13,6 +13,7 @@ from web3 import Web3
 
 from checker.constants import CHAIN_DATA
 from checker.constants import RPC_TIMEOUT_SECONDS
+from checker.constants import SPOKE_ABI
 
 
 def main_collector(timestamp: int | None = None) -> str:
@@ -49,12 +50,26 @@ def _read_spoke_price_per_share(
             computed_at: unix time of the price.
     Raises on any failure (missing RPC variable, RPC error, revert).
     """
-    # Read pricePoolPerShare(poolId, scId, false) and computedAt from
-    # markersPricePoolPerShare function, both at the same block
-    # function markersPricePoolPerShare(PoolId poolId, ShareClassId scId)
-    #        external
-    #        view
-    #        returns (uint64 computedAt, uint64 maxAge, uint64 validUntil)
+    web3 = _create_web3_transport(chain_id)
+    # Pin one block number, so both values come from the same block
+    if timestamp is None:
+        block = web3.eth.block_number
+    else:
+        block = _find_adjacent_block(timestamp, chain_id)
+
+    chain = CHAIN_DATA[chain_id]
+    spoke = web3.eth.contract(address=chain["spoke_contract"], abi=SPOKE_ABI)
+    # checkValidity is False: the call must return the stored price, not revert on an old one
+    price = spoke.functions.pricePoolPerShare(
+        chain["poolId"], chain["scId"], False
+    ).call(block_identifier=block)
+    computed_at, _max_age, _valid_until = spoke.functions.markersPricePoolPerShare(
+        chain["poolId"], chain["scId"]
+    ).call(block_identifier=block)
+
+    if computed_at == 0:
+        raise ValueError(f"Spoke on chain {chain_id} has no price for the share class")
+    return block, price, computed_at
 
 def _read_chronicle_price_per_share(
         timestamp: int | None = None,
