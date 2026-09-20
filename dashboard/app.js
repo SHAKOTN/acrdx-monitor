@@ -18,6 +18,9 @@ const CHECKS = [
     value: "divergence_pct", limit: "limit_pct", unit: "%", explain: explainDivergence },
 ];
 
+// The day (unix time divided by 86400) whose scans are listed under the strip; null = none
+let selectedDay = null;
+
 const byId = (id) => document.getElementById(id);
 const escapeHtml = (text) => String(text).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
 const link = (address, text) => `<a href="${ETHERSCAN}${address}#readContract" target="_blank" rel="noopener">${text}</a>`;
@@ -110,11 +113,37 @@ function renderDays(history) {
   for (let day = first; day <= last; day++) {
     const known = worstByDay.get(day);
     const title = known ? `${RESULT_WORDS[known.result]}, ${known.scans} scans` : "no scan";
-    cells += `<span data-result="${known ? known.result : ""}" title="${formatDay(day * 86400)}: ${title}"></span>`;
+    cells += `<button type="button" data-day="${day}" data-result="${known ? known.result : ""}" `
+      + `aria-pressed="${day === selectedDay}" title="${formatDay(day * 86400)}: ${title}"></button>`;
   }
   byId("days-strip").innerHTML = cells;
+  byId("days-strip").onclick = (event) => {
+    const day = Number(event.target.dataset.day);
+    if (!day) return;
+    selectedDay = day === selectedDay ? null : day;
+    renderDays(history);
+  };
   byId("days-first").textContent = formatDay(first * 86400);
   byId("days-last").textContent = formatDay(last * 86400);
+  renderDayScans(history.filter((run) => Math.floor(run.timestamp / 86400) === selectedDay));
+}
+
+// The scans of the selected day, one row per scan. A scan with no verdict shows its reason.
+function renderDayScans(runs) {
+  const section = byId("day-scans");
+  section.hidden = selectedDay === null;
+  if (selectedDay === null) return;
+  byId("day-scans-title").textContent = `${formatDay(selectedDay * 86400)}: ${runs.length} scans`;
+  byId("day-scans-body").innerHTML = runs.map((run) => `<tr>
+    <td>${formatTime(run.timestamp)}</td>
+    <td class="result-${run.overall}">${RESULT_WORDS[run.overall]}</td>
+    ${CHECKS.map((check) => {
+      const verdict = findVerdict(run, check.id);
+      const text = verdict[check.value] === undefined ? escapeHtml(verdict.reason) : `${verdict[check.value]} ${check.unit}`;
+      return `<td class="result-${verdict.result}">${text}</td>`;
+    }).join("")}
+    <td>${run.readings.chains[0].block ?? "—"}</td>
+  </tr>`).join("");
 }
 
 function renderCheck(check, latest, history) {
