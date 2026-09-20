@@ -1,0 +1,26 @@
+{
+  "run_at": 1789905187,
+  "timestamp": 1789905187,
+  "mode": "live",
+  "readings": {
+    "chronicle": {
+      "status": "ok",
+      "block": 26018547,
+      "price": "1022826055629480000",
+      "error": null
+    },
+    "chains": [
+      {
+        "chain_id": 1,
+        "name": "ethereum",
+        "status": "ok",
+        "block": 26018547,
+        "price": "1023861879292223045",
+        "computed_at": 1789646400,
+        "error": null
+      }
+    ]
+  },
+  "verdicts": [],
+  "overall": "no_verdict"
+}

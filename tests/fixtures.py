@@ -14,6 +14,11 @@ FAKE_RPC_URL = "https://rpc.invalid/secret-key"
 SPOKE_PRICE = 1020232466949343944
 SPOKE_COMPUTED_AT = 1785844800
 MAX_UINT64 = 2**64 - 1
+CHRONICLE_PRICE = 1021003405586530000
+REPLAY_TIMESTAMP = 1786363199
+REPLAY_BLOCK = 25724454
+LATEST_BLOCK = 26018270
+WALL_CLOCK = 1789901843
 
 
 def fake_get_block(block_identifier):
@@ -34,10 +39,9 @@ def patch_web3_with_fake_chain(monkeypatch):
 @pytest.fixture
 def fake_spoke_web3(monkeypatch):
     """
-    Fake Web3 whose latest block is 500 and whose Spoke returns the values above.
+    Fake Web3 whose Spoke returns the values above.
     """
     fake_web3 = MagicMock()
-    fake_web3.eth.block_number = 500
     spoke_functions = fake_web3.eth.contract.return_value.functions
     spoke_functions.pricePoolPerShare.return_value.call.return_value = SPOKE_PRICE
     spoke_functions.markersPricePoolPerShare.return_value.call.return_value = (
@@ -45,3 +49,67 @@ def fake_spoke_web3(monkeypatch):
     )
     monkeypatch.setattr(chain_reader, "_create_web3_transport", lambda chain_id: fake_web3)
     return fake_web3
+
+
+@pytest.fixture
+def fake_chronicle_web3(monkeypatch):
+    """
+    Fake Web3 whose Chronicle oracle returns CHRONICLE_PRICE.
+    """
+    fake_web3 = MagicMock()
+    fake_web3.eth.contract.return_value.functions.read.return_value.call.return_value = (
+        CHRONICLE_PRICE
+    )
+    monkeypatch.setattr(chain_reader, "_create_web3_transport", lambda chain_id: fake_web3)
+    return fake_web3
+
+
+@pytest.fixture
+def patch_reads_ok(monkeypatch):
+    """
+    Both reads succeed with the values of block REPLAY_BLOCK.
+    """
+    monkeypatch.setattr(
+        chain_reader, "_read_spoke_data",
+        lambda chain_id, block_and_error: {
+            "chain_id": chain_id, "name": "ethereum", "status": "ok",
+            "block": block_and_error[0], "price": str(SPOKE_PRICE),
+            "computed_at": SPOKE_COMPUTED_AT, "error": None,
+        },
+    )
+    monkeypatch.setattr(
+        chain_reader, "_read_chronicle_data",
+        lambda block_and_error: {
+            "status": "ok", "block": block_and_error[0], "price": str(CHRONICLE_PRICE), "error": None
+        },
+    )
+
+
+@pytest.fixture
+def patch_rpc_down(monkeypatch):
+    """
+    Every RPC connection fails with an error text that holds the RPC URL.
+    """
+    def raise_connection_error(chain_id):
+        raise ConnectionError(f"cannot connect to {FAKE_RPC_URL}")
+
+    monkeypatch.setenv("MAINNET_RPC_URL", FAKE_RPC_URL)
+    monkeypatch.setattr(chain_reader, "_create_web3_transport", raise_connection_error)
+
+
+@pytest.fixture
+def patch_output_files_and_clock(monkeypatch, tmp_path):
+    """
+    Output goes to a temporary directory. The wall clock is WALL_CLOCK. The latest block is
+    LATEST_BLOCK. The block of any replay time is REPLAY_BLOCK.
+    """
+    fake_web3 = MagicMock()
+    fake_web3.eth.block_number = LATEST_BLOCK
+    monkeypatch.setattr(
+        chain_reader, "_find_adjacent_block", lambda timestamp, chain_id: REPLAY_BLOCK
+    )
+    monkeypatch.setattr(chain_reader, "_create_web3_transport", lambda chain_id: fake_web3)
+    monkeypatch.setattr(chain_reader, "LATEST_FILE", tmp_path / "latest.json")
+    monkeypatch.setattr(chain_reader, "REPLAY_DIRECTORY", tmp_path / "replay")
+    monkeypatch.setattr(chain_reader.time, "time", lambda: WALL_CLOCK)
+    return tmp_path

@@ -1,3 +1,5 @@
+from pathlib import Path
+
 # Chain IDs
 ETHEREUM = 1
 MONAD = 143
@@ -14,6 +16,25 @@ SC_ID = "0x00010000000000080000000000000001"
 SPOKE_ADDRESS = "0xEC3582fcDc34078a4B7a8c75a5a3AE46f48525aB"
 
 PRICE_DECIMALS = 18
+
+# Output files. Live mode writes LATEST_FILE; replay mode writes REPLAY_DIRECTORY/<timestamp>.json
+DATA_DIRECTORY = Path(__file__).parent.parent / "data"
+LATEST_FILE = DATA_DIRECTORY / "latest.json"
+REPLAY_DIRECTORY = DATA_DIRECTORY / "replay"
+
+# Longest error text that is stored in a reading
+ERROR_TEXT_LIMIT = 300
+
+# The Chronicle read function that the checker calls
+CHRONICLE_ABI = [
+    {
+        "name": "read",
+        "type": "function",
+        "stateMutability": "view",
+        "inputs": [],
+        "outputs": [{"name": "value", "type": "uint256"}],
+    },
+]
 
 # The two Spoke read functions that the checker calls
 SPOKE_ABI = [
@@ -68,6 +89,10 @@ RESULT_OK = "ok"
 RESULT_NO_VERDICT = "no_verdict"
 RESULT_ALERT = "alert"
 RESULT_SEVERITY = [RESULT_OK, RESULT_NO_VERDICT, RESULT_ALERT]
+
+# Run mode: the "mode" field of a run.
+MODE_LIVE = "live"
+MODE_REPLAY = "replay"
 
 # Read status: the "status" field of a reading.
 STATUS_OK = "ok"

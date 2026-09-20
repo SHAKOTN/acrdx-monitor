@@ -1,7 +1,7 @@
 {
   "about": "Contract of one checker run. The chain reader writes 'readings'; the judgement adds 'verdicts' and 'overall'. Live mode writes data/latest.json (one run). Replay mode writes data/replay/<name>.json (a list of runs). The dashboard reads only these files.",
   "rules": {
-    "timestamp": "The checked moment, unix seconds UTC. Live: time of the latest Ethereum block. Replay: the requested time. Every age is measured against this value, never against the wall clock.",
+    "timestamp": "The checked moment, unix seconds UTC. Live: the wall clock of the run (same as run_at). Replay: the requested time. The judgement measures every age against this value and never reads a clock itself.",
     "run_at": "Wall clock of the run, unix seconds UTC. The dashboard shows 'monitor not running' when run_at of latest.json is too old.",
     "mode": "live | replay",
     "status": "ok | failed. A failed reading has null values and an error text. RPC URLs are redacted from every error.",
