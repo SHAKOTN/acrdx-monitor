@@ -7,7 +7,6 @@ const STOPPED_AFTER_SECONDS = 45 * 60;
 const SEVERITY = ["ok", "no_verdict", "alert"];
 const RESULT_WORDS = { ok: "OK", no_verdict: "No verdict", alert: "Alert" };
 const ETHERSCAN = "https://etherscan.io/address/";
-const TOKEN = "0x9477724bb54ad5417de8baff29e59df3fb4da74f";
 const SPOKE = "0xEC3582fcDc34078a4B7a8c75a5a3AE46f48525aB";
 const CHRONICLE = "0x9a3bF392f86acd1b1EC07d026B326302eAED7488";
 
@@ -20,6 +19,8 @@ const CHECKS = [
 
 // The day (unix time divided by 86400) whose scans are listed under the strip; null = none
 let selectedDay = null;
+// The timestamp of the scan that the readings table shows; null = the last scan of the day
+let selectedScan = null;
 
 const byId = (id) => document.getElementById(id);
 const escapeHtml = (text) => String(text).replace(/[&<>"]/g, (c) => `&#${c.charCodeAt(0)};`);
@@ -98,7 +99,7 @@ function renderLoadError(error) {
   byId("status-detail").textContent = `The page could not load the monitor's files (${error.message}).`;
 }
 
-function renderDays(history) {
+function renderDays(history, latest) {
   const worstByDay = new Map();
   for (const run of history) {
     const day = Math.floor(run.timestamp / 86400);
@@ -114,27 +115,36 @@ function renderDays(history) {
     const known = worstByDay.get(day);
     const title = known ? `${RESULT_WORDS[known.result]}, ${known.scans} scans` : "no scan";
     cells += `<button type="button" data-day="${day}" data-result="${known ? known.result : ""}" `
-      + `aria-pressed="${day === selectedDay}" title="${formatDay(day * 86400)}: ${title}"></button>`;
+      + `aria-pressed="${day === selectedDay}" ${known ? "" : "disabled"} title="${formatDay(day * 86400)}: ${title}"></button>`;
   }
   byId("days-strip").innerHTML = cells;
   byId("days-strip").onclick = (event) => {
     const day = Number(event.target.dataset.day);
     if (!day) return;
     selectedDay = day === selectedDay ? null : day;
-    renderDays(history);
+    selectedScan = null;
+    renderDays(history, latest);
   };
   byId("days-first").textContent = formatDay(first * 86400);
   byId("days-last").textContent = formatDay(last * 86400);
-  renderDayScans(history.filter((run) => Math.floor(run.timestamp / 86400) === selectedDay));
+  renderDayScans(history, latest);
 }
 
 // The scans of the selected day, one row per scan. A scan with no verdict shows its reason.
-function renderDayScans(runs) {
+// The readings table shows the selected scan of that day, or the latest run if no day is selected.
+function renderDayScans(history, latest) {
   const section = byId("day-scans");
   section.hidden = selectedDay === null;
-  if (selectedDay === null) return;
+  if (selectedDay === null) return renderReadings(latest, "latest scan");
+  const runs = history.filter((run) => Math.floor(run.timestamp / 86400) === selectedDay);
+  const shown = runs.find((run) => run.timestamp === selectedScan) ?? runs[runs.length - 1];
+  renderReadings(shown, formatTime(shown.timestamp));
+  byId("day-scans-body").onclick = (event) => {
+    selectedScan = Number(event.target.closest("tr").dataset.scan);
+    renderDayScans(history, latest);
+  };
   byId("day-scans-title").textContent = `${formatDay(selectedDay * 86400)}: ${runs.length} scans`;
-  byId("day-scans-body").innerHTML = runs.map((run) => `<tr>
+  byId("day-scans-body").innerHTML = runs.map((run) => `<tr data-scan="${run.timestamp}" aria-selected="${run === shown}">
     <td>${formatTime(run.timestamp)}</td>
     <td class="result-${run.overall}">${RESULT_WORDS[run.overall]}</td>
     ${CHECKS.map((check) => {
@@ -217,7 +227,8 @@ function renderChart(card, check, history, latestLimit) {
   };
 }
 
-function renderReadings(latest) {
+function renderReadings(latest, when) {
+  byId("readings-title").textContent = `What the monitor read, ${when}`;
   const chronicle = { ...latest.readings.chronicle, name: "Chronicle oracle, ethereum", address: CHRONICLE };
   const spokes = latest.readings.chains.map((reading) => ({ ...reading, name: `Spoke, ${reading.name}`, address: SPOKE }));
   byId("readings-body").innerHTML = [...spokes, chronicle].map((reading) => `<tr>
@@ -241,15 +252,12 @@ async function load() {
       .sort((a, b) => a.timestamp - b.timestamp);
     const silence = Date.now() / 1000 - latest.run_at;
     renderStatus(latest, silence > STOPPED_AFTER_SECONDS ? silence : 0);
-    renderDays(history);
+    renderDays(history, latest);
     CHECKS.forEach((check) => renderCheck(check, latest, history));
-    renderReadings(latest);
   } catch (error) {
     renderLoadError(error);
   }
 }
 
-const tokenLink = byId("token-link");
-tokenLink.href = ETHERSCAN + TOKEN;
 load();
 setInterval(load, REFRESH_SECONDS * 1000);

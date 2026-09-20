@@ -12,7 +12,6 @@
 <body>
   <header class="masthead">
     <h1>ACRDX price monitor</h1>
-    <a id="token-link" target="_blank" rel="noopener">0x9477724bb54ad5417de8baff29e59df3fb4da74f</a>
   </header>
 
   <main class="panel">
@@ -22,7 +21,7 @@
         <p id="status-detail" class="status-detail"></p>
       </div>
       <div class="days">
-        <p class="label">Worst result of each day, UTC. Select a day to see its scans.</p>
+        <p class="label">Worst result of each day, UTC. Select a day, then a scan, to see what was read.</p>
         <div id="days-strip" class="days-strip"></div>
         <div class="days-axis"><span id="days-first"></span><span id="days-last"></span></div>
       </div>
@@ -45,7 +44,7 @@
     </div>
 
     <section class="card readings">
-      <h2>What the monitor read</h2>
+      <h2 id="readings-title">What the monitor read</h2>
       <div class="table-scroll">
         <table>
           <thead>
@@ -57,10 +56,6 @@
     </section>
   </main>
 
-  <footer>
-    <p>A scan runs every 15 minutes. Scans before the first live run are a backfill, one every 12 hours.</p>
-    <p>Data: <a href="data/latest.json">latest.json</a>, <a href="data/history.jsonl">history.jsonl</a></p>
-  </footer>
 
   <script src="app.js"></script>
 </body>
