@@ -98,9 +98,15 @@ MODE_REPLAY = "replay"
 STATUS_OK = "ok"
 STATUS_FAILED = "failed"
 
+# Time
+SECONDS_IN_HOUR = 3600
+SECONDS_IN_DAY = 86400
+SATURDAY = 5  # datetime.weekday(): Monday is 0, Saturday is 5, Sunday is 6
+
 # Limits
-# Age of the Spoke's computedAt with weekend and US market holiday hours removed.
-# Calibrated by replay, Apr 3 -> Sep 18 2026: worst normal age 79 h, August event 204 h.
+# Age of the Spoke's computedAt with weekend hours removed.
+# Replay, Apr 3 -> Sep 18 2026: the August event alerts from Aug 10 00:15 UTC.
+# Known cost: 2 false alerts after a holiday (Jun 23, Sep 8); a limit of 104 h removes them.
 SPOKE_PRICE_AGE_LIMIT_HOURS = 84
 # Chronicle against Spoke, in percent. First value, not calibrated by replay.
 SPOKE_CHRONICLE_DIVERGENCE_LIMIT_PCT = 0.15

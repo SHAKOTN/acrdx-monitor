@@ -9,7 +9,13 @@ judge() takes the values out of the readings and adds "chain_id" and the read er
 The judgements do not read the chain, the files or the wall clock.
 """
 
+from datetime import datetime
+from datetime import timezone
 from typing import Any
+
+from checker.constants import SATURDAY
+from checker.constants import SECONDS_IN_DAY
+from checker.constants import SECONDS_IN_HOUR
 
 
 def judge(file_path: str) -> dict[str, Any]:
@@ -50,7 +56,7 @@ def _judge_if_compute_at_stale(
         timestamp: int,
 ) -> dict[str, int | float | str | None]:
     """
-    Compares the age of computed_at at `timestamp`, weekend and market holiday hours excluded,
+    Compares the age of computed_at at `timestamp`, weekend hours excluded,
     with SPOKE_PRICE_AGE_LIMIT_HOURS from constants.py (check id spoke_price_age).
     Returns a verdict: alert if the age is over the limit, ok if not, no_verdict if computed_at is None.
     Fields: check, result, age_hours, limit_hours, computed_at, since | reason.
@@ -60,7 +66,14 @@ def _judge_if_compute_at_stale(
 
 def _exclude_market_holidays_and_weekends(start: int, end: int) -> float:
     """
-    Hours between two unix timestamps (UTC), with Saturdays, Sundays and
-    US market holidays (list in constants.py) excluded.
+    Hours between two unix timestamps (UTC), with Saturdays and Sundays excluded.
+    Returns 0 if end is not after start.
     """
-    pass
+    weekday_seconds = 0
+    day_start = start - start % SECONDS_IN_DAY
+    while day_start < end:
+        day_end = day_start + SECONDS_IN_DAY
+        if datetime.fromtimestamp(day_start, tz=timezone.utc).weekday() < SATURDAY:
+            weekday_seconds += min(end, day_end) - max(start, day_start)
+        day_start = day_end
+    return weekday_seconds / SECONDS_IN_HOUR

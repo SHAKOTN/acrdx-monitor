@@ -20,6 +20,10 @@ REPLAY_BLOCK = 25724454
 LATEST_BLOCK = 26018270
 WALL_CLOCK = 1789901843
 
+# Monday 2026-08-03 00:00 UTC. SPOKE_COMPUTED_AT is Tuesday 2026-08-04 12:00 UTC
+# and REPLAY_TIMESTAMP is one second before Monday 2026-08-10 12:00 UTC.
+MONDAY_MIDNIGHT = 1785715200
+
 
 def fake_get_block(block_identifier):
     """
