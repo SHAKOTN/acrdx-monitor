@@ -15,7 +15,9 @@ from datetime import timezone
 from pathlib import Path
 from typing import Any
 
+from checker.constants import CHECK_SPOKE_CHRONICLE_DIVERGENCE
 from checker.constants import CHECK_SPOKE_PRICE_AGE
+from checker.constants import ETHEREUM
 from checker.constants import RESULT_ALERT
 from checker.constants import RESULT_NO_VERDICT
 from checker.constants import RESULT_OK
@@ -23,6 +25,7 @@ from checker.constants import RESULT_SEVERITY
 from checker.constants import SATURDAY
 from checker.constants import SECONDS_IN_DAY
 from checker.constants import SECONDS_IN_HOUR
+from checker.constants import SPOKE_CHRONICLE_DIVERGENCE_LIMIT_PCT
 from checker.constants import SPOKE_PRICE_AGE_LIMIT_HOURS
 
 
@@ -34,13 +37,19 @@ def judge(file_path: str) -> dict[str, Any]:
     The clock of every judgement is the "timestamp" field of the file.
     """
     run = json.loads(Path(file_path).read_text())
+    chronicle = run["readings"]["chronicle"]
+    chronicle_price = int(chronicle["price"]) if chronicle["price"] else None
     verdicts = []
     for reading in run["readings"]["chains"]:
-        verdict = _judge_if_compute_at_stale(reading["computed_at"], run["timestamp"])
-        verdict["chain_id"] = reading["chain_id"]
-        if reading["error"]:
-            verdict["reason"] += f": {reading['error']}"
-        verdicts.append(verdict)
+        spoke_price = int(reading["price"]) if reading["price"] else None
+        chain_verdicts = [_judge_if_compute_at_stale(reading["computed_at"], run["timestamp"])]
+        if reading["chain_id"] == ETHEREUM:
+            chain_verdicts.append(_judge_if_price_divergence(spoke_price, chronicle_price))
+        for verdict in chain_verdicts:
+            verdict["chain_id"] = reading["chain_id"]
+            if "reason" in verdict:
+                verdict["reason"] += f": {reading['error'] or chronicle['error']}"
+        verdicts += chain_verdicts
     run["verdicts"] = verdicts
     run["overall"] = max(
         (verdict["result"] for verdict in verdicts),
@@ -62,7 +71,20 @@ def _judge_if_price_divergence(
     Prices are raw integers with 18 decimals.
     Fields: check, result, divergence_pct, limit_pct | reason.
     """
-    pass
+    if not spoke_price or not chronicle_price:
+        return {
+            "check": CHECK_SPOKE_CHRONICLE_DIVERGENCE,
+            "result": RESULT_NO_VERDICT,
+            "reason": "spoke or chronicle read failed",
+        }
+    divergence_pct = abs(chronicle_price - spoke_price) / spoke_price * 100
+    over_limit = divergence_pct > SPOKE_CHRONICLE_DIVERGENCE_LIMIT_PCT
+    return {
+        "check": CHECK_SPOKE_CHRONICLE_DIVERGENCE,
+        "result": RESULT_ALERT if over_limit else RESULT_OK,
+        "divergence_pct": round(divergence_pct, 4),
+        "limit_pct": SPOKE_CHRONICLE_DIVERGENCE_LIMIT_PCT,
+    }
 
 def _judge_if_chain_price_divergence(
         mainnet_price: int | None,

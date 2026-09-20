@@ -2,13 +2,17 @@ import json
 
 from checker.alert_judgement import _exclude_market_holidays_and_weekends
 from checker.alert_judgement import _judge_if_compute_at_stale
+from checker.alert_judgement import _judge_if_price_divergence
 from checker.alert_judgement import judge
 from checker.constants import SECONDS_IN_DAY
 from checker.constants import SECONDS_IN_HOUR
 from tests.fixtures import AGE_AT_LIMIT_TIMESTAMP
+from tests.fixtures import CHRONICLE_PRICE
+from tests.fixtures import CHRONICLE_PRICE_OVER_LIMIT
 from tests.fixtures import MONDAY_MIDNIGHT
 from tests.fixtures import REPLAY_TIMESTAMP
 from tests.fixtures import SPOKE_COMPUTED_AT
+from tests.fixtures import SPOKE_PRICE
 from tests.fixtures import write_run_file
 
 
@@ -80,14 +84,23 @@ def test_judge_august_event_is_alert(tmp_path):
     file_path = write_run_file(tmp_path, REPLAY_TIMESTAMP + 1, SPOKE_COMPUTED_AT, None)
     run = judge(file_path)
     assert run["overall"] == "alert"
-    assert run["verdicts"] == [{
-        "check": "spoke_price_age",
-        "result": "alert",
-        "age_hours": 96.0,
-        "limit_hours": 84,
-        "computed_at": SPOKE_COMPUTED_AT,
-        "chain_id": 1,
-    }]
+    assert run["verdicts"] == [
+        {
+            "check": "spoke_price_age",
+            "result": "alert",
+            "age_hours": 96.0,
+            "limit_hours": 84,
+            "computed_at": SPOKE_COMPUTED_AT,
+            "chain_id": 1,
+        },
+        {
+            "check": "spoke_chronicle_divergence",
+            "result": "ok",
+            "divergence_pct": 0.0756,
+            "limit_pct": 0.15,
+            "chain_id": 1,
+        },
+    ]
 
 
 def test_judge_fresh_price_is_ok(tmp_path):
@@ -100,15 +113,52 @@ def test_judge_failed_read_is_no_verdict(tmp_path):
     file_path = write_run_file(tmp_path, REPLAY_TIMESTAMP, None, "ConnectionError: <RPC_URL>")
     run = judge(file_path)
     assert run["overall"] == "no_verdict"
-    assert run["verdicts"] == [{
-        "check": "spoke_price_age",
-        "result": "no_verdict",
-        "reason": "spoke read failed: ConnectionError: <RPC_URL>",
-        "chain_id": 1,
-    }]
+    assert run["verdicts"] == [
+        {
+            "check": "spoke_price_age",
+            "result": "no_verdict",
+            "reason": "spoke read failed: ConnectionError: <RPC_URL>",
+            "chain_id": 1,
+        },
+        {
+            "check": "spoke_chronicle_divergence",
+            "result": "no_verdict",
+            "reason": "spoke or chronicle read failed: ConnectionError: <RPC_URL>",
+            "chain_id": 1,
+        },
+    ]
 
 
 def test_judge_writes_the_run_back_to_the_file(tmp_path):
     file_path = write_run_file(tmp_path, REPLAY_TIMESTAMP + 1, SPOKE_COMPUTED_AT, None)
     run = judge(file_path)
     assert json.loads(open(file_path).read()) == run
+
+
+def test_judge_if_price_divergence_spoke_read_failed():
+    verdict = _judge_if_price_divergence(None, CHRONICLE_PRICE)
+    assert verdict == {
+        "check": "spoke_chronicle_divergence",
+        "result": "no_verdict",
+        "reason": "spoke or chronicle read failed",
+    }
+
+
+def test_judge_if_price_divergence_chronicle_read_failed():
+    assert _judge_if_price_divergence(SPOKE_PRICE, None)["result"] == "no_verdict"
+
+
+def test_judge_if_price_divergence_under_limit():
+    verdict = _judge_if_price_divergence(SPOKE_PRICE, CHRONICLE_PRICE)
+    assert verdict == {
+        "check": "spoke_chronicle_divergence",
+        "result": "ok",
+        "divergence_pct": 0.0756,
+        "limit_pct": 0.15,
+    }
+
+
+def test_judge_if_price_divergence_over_limit():
+    verdict = _judge_if_price_divergence(SPOKE_PRICE, CHRONICLE_PRICE_OVER_LIMIT)
+    assert verdict["result"] == "alert"
+    assert verdict["divergence_pct"] == 0.2
