@@ -2,8 +2,8 @@
 // The format of a run is described in data/contract.json.
 
 const REFRESH_SECONDS = 60;
-// The monitor runs every hour. After 3 missed runs the page says "not running".
-const STOPPED_AFTER_SECONDS = 3 * 60 * 60;
+// The monitor runs every 12 hours. After 20 hours without a run the page says "not running".
+const STOPPED_AFTER_SECONDS = 20 * 60 * 60;
 const SEVERITY = ["ok", "no_verdict", "alert"];
 const RESULT_WORDS = { ok: "OK", no_verdict: "No verdict", alert: "Alert" };
 const ETHERSCAN = "https://etherscan.io/address/";
@@ -154,7 +154,7 @@ function renderDays(history, latest) {
   byId("days-last").textContent = formatDay(last * 86400);
 }
 
-// The scans of the selected day, one row per scan. A scan with no verdict shows its reason.
+// The scans of the selected day, one row per scan. A check with no verdict shows "Could not read".
 function renderDayScans(history, latest, shown) {
   byId("day-scans").hidden = selectedDay === null;
   if (selectedDay === null) return;
@@ -169,7 +169,7 @@ function renderDayScans(history, latest, shown) {
     <td class="result-${run.overall}">${RESULT_WORDS[run.overall]}</td>
     ${CHECKS.map((check) => {
       const verdict = findVerdict(run, check.id);
-      const text = verdict[check.value] === undefined ? escapeHtml(verdict.reason) : `${verdict[check.value]} ${check.unit}`;
+      const text = verdict[check.value] === undefined ? "Could not read" : `${verdict[check.value]} ${check.unit}`;
       return `<td class="result-${verdict.result}">${text}</td>`;
     }).join("")}
     <td>${run.readings.chains[0].block ?? "—"}</td>

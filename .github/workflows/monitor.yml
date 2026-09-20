@@ -1,11 +1,11 @@
 name: monitor
 
-# One scan every hour: read and judge, commit the data, publish the page.
+# One scan every 12 hours: read and judge, commit the data, publish the page.
 # GitHub starts scheduled runs late or skips them; the page says "monitor not running"
-# when the last run is older than 3 hours.
+# when the last run is older than 20 hours.
 on:
   schedule:
-    - cron: "17 * * * *"
+    - cron: "17 */12 * * *"
   workflow_dispatch:
   push:
     branches: [main]
