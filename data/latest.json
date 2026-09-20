@@ -1,11 +1,11 @@
 {
-  "run_at": 1789922440,
-  "timestamp": 1789922440,
+  "run_at": 1789927005,
+  "timestamp": 1789927005,
   "mode": "live",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26019983,
+      "block": 26020360,
       "price": "1022826055629480000",
       "error": null
     },
@@ -14,7 +14,7 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26019983,
+        "block": 26020360,
         "price": "1023861879292223045",
         "computed_at": 1789646400,
         "error": null
@@ -22,17 +22,17 @@
       {
         "chain_id": 98866,
         "name": "plume",
-        "status": "ok",
-        "block": 94485337,
-        "price": "1023861879292223045",
-        "computed_at": 1789646400,
-        "error": null
+        "status": "failed",
+        "block": null,
+        "price": null,
+        "computed_at": null,
+        "error": "ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))"
       },
       {
         "chain_id": 10,
         "name": "optimism",
         "status": "ok",
-        "block": 157161831,
+        "block": 157164114,
         "price": "1023861879292223045",
         "computed_at": 1789646400,
         "error": null
@@ -41,7 +41,7 @@
         "chain_id": 8453,
         "name": "base",
         "status": "ok",
-        "block": 51566546,
+        "block": 51568829,
         "price": "1023861879292223045",
         "computed_at": 1789646400,
         "error": null
@@ -66,10 +66,8 @@
     },
     {
       "check": "spoke_price_age",
-      "result": "ok",
-      "age_hours": 36.0,
-      "limit_hours": 84,
-      "computed_at": 1789646400,
+      "result": "no_verdict",
+      "reason": "spoke read failed: ConnectionError: ('Connection aborted.', ConnectionResetError(104, 'Connection reset by peer'))",
       "chain_id": 98866
     },
     {
@@ -89,5 +87,5 @@
       "chain_id": 8453
     }
   ],
-  "overall": "ok"
+  "overall": "no_verdict"
 }
