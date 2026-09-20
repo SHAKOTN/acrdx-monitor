@@ -1,14 +1,18 @@
 """
 Module for judging the readings.
 
-Every judgement takes readings and returns a "verdict" dict in the format of
-../data/contract.json, with "result" = ok | no_verdict | alert (constants.RESULT_*).
-A judgement whose reading has status "failed" returns no_verdict, never ok.
+Every judgement takes plain values (a price or a time; None means "the read failed")
+and returns a "verdict" dict in the format of ../data/contract.json,
+with "result" = ok | no_verdict | alert (constants.RESULT_*).
+A judgement that gets None returns no_verdict, never ok.
+judge() takes the values out of the readings and adds "chain_id" and the read error to the verdict.
 The judgements do not read the chain, the files or the wall clock.
 """
 
+from typing import Any
 
-def judge(file_path: str) -> dict:
+
+def judge(file_path: str) -> dict[str, Any]:
     """
     Main runner that ingests the json written by chain_reader.main_collector.
     Processes data, fills in "verdicts" and "overall" (the worst result), writes the file back
@@ -17,29 +21,39 @@ def judge(file_path: str) -> dict:
     """
     pass
 
-def _judge_if_price_divergence(spoke_reading: dict, chronicle_reading: dict) -> dict:
+def _judge_if_price_divergence(
+        spoke_price: int | None,
+        chronicle_price: int | None,
+) -> dict[str, int | float | str | None]:
     """
     Compares Chronicle last reported price with price per share (check id spoke_chronicle_divergence).
     Mainnet price from Spoke is used as the primary reference.
     Returns a verdict: alert if the divergence in percent is over
-    SPOKE_CHRONICLE_DIVERGENCE_LIMIT_PCT, ok if not, no_verdict if either reading failed.
-    Fields: check, chain_id, result, divergence_pct, limit_pct | reason.
+    SPOKE_CHRONICLE_DIVERGENCE_LIMIT_PCT, ok if not, no_verdict if either price is None.
+    Prices are raw integers with 18 decimals.
+    Fields: check, result, divergence_pct, limit_pct | reason.
     """
     pass
 
-def _judge_if_chain_price_divergence(mainnet_reading: dict, chain_reading: dict) -> dict:
+def _judge_if_chain_price_divergence(
+        mainnet_price: int | None,
+        chain_price: int | None,
+) -> dict[str, int | float | str | None]:
     """
     Compares Mainnet price from Spoke to the price of one other chain (check id cross_chain_price_mismatch).
-    Returns a verdict: alert if there is a mismatch, ok if not, no_verdict if either reading failed.
+    Returns a verdict: alert if there is a mismatch, ok if not, no_verdict if either price is None.
     """
     pass
 
-def _judge_if_compute_at_stale(chain_reading: dict, timestamp: int) -> dict:
+def _judge_if_compute_at_stale(
+        computed_at: int | None,
+        timestamp: int,
+) -> dict[str, int | float | str | None]:
     """
     Compares the age of computed_at at `timestamp`, weekend and market holiday hours excluded,
     with SPOKE_PRICE_AGE_LIMIT_HOURS from constants.py (check id spoke_price_age).
-    Returns a verdict: alert if the age is over the limit, ok if not, no_verdict if the reading failed.
-    Fields: check, chain_id, result, age_hours, limit_hours, computed_at, since | reason.
+    Returns a verdict: alert if the age is over the limit, ok if not, no_verdict if computed_at is None.
+    Fields: check, result, age_hours, limit_hours, computed_at, since | reason.
     "since" is the moment the age crossed the limit.
     """
     pass
