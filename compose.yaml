@@ -9,4 +9,24 @@ services:
       - path: .env
         required: false
 
-  # dashboard service will be added later
+  # Runs the checker every 15 minutes. The runs persist in ./data
+  scheduler:
+    build: .
+    command: sh -c "while true; do python -m checker.main; sleep 900; done"
+    volumes:
+      - ./checker:/app/checker
+      - ./data:/app/data
+    env_file:
+      - path: .env
+        required: false
+    restart: unless-stopped
+
+  # Static page on http://localhost:8080. Same layout as GitHub Pages: data/ under the page root
+  dashboard:
+    image: nginx:alpine
+    ports:
+      - "8080:80"
+    volumes:
+      # not read-only: Docker must create the data/ mount point inside it
+      - ./dashboard:/usr/share/nginx/html
+      - ./data:/usr/share/nginx/html/data:ro
