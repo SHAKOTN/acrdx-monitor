@@ -1,11 +1,11 @@
 {
-  "run_at": 1789906419,
-  "timestamp": 1789906419,
+  "run_at": 1789906703,
+  "timestamp": 1789906703,
   "mode": "live",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26018650,
+      "block": 26018673,
       "price": "1022826055629480000",
       "error": null
     },
@@ -14,7 +14,7 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26018650,
+        "block": 26018673,
         "price": "1023861879292223045",
         "computed_at": 1789646400,
         "error": null
