@@ -89,3 +89,20 @@ def _find_adjacent_block(timestamp: int, chain_id: int) -> int:
     Never returns a later block: that would read the future.
     Raises if the chain cannot serve it; main_collector turns that into a "failed" reading.
     """
+    web3 = _create_web3_transport(chain_id)
+    latest_block = web3.eth.get_block("latest")
+    if timestamp >= latest_block["timestamp"]:
+        return latest_block["number"]
+    if timestamp < web3.eth.get_block(0)["timestamp"]:
+        raise ValueError(f"Timestamp {timestamp} is before the first block of chain {chain_id}")
+
+    # Binary search. Always true: time of block `low` <= timestamp < time of block `high`
+    low = 0
+    high = latest_block["number"]
+    while high - low > 1:
+        middle = (low + high) // 2
+        if web3.eth.get_block(middle)["timestamp"] <= timestamp:
+            low = middle
+        else:
+            high = middle
+    return low
