@@ -43,6 +43,20 @@
       <section id="check-divergence" class="card check"></section>
     </div>
 
+    <section class="card chains">
+      <h2>Spoke price on each chain</h2>
+      <p id="chains-when" class="label"></p>
+      <p class="label">Ethereum sends each new price to the other chains through bridges. A difference for some minutes after a new price is normal.</p>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr><th>Chain</th><th>Price age</th><th>Price</th><th>Price computed at</th><th>Against Ethereum</th></tr>
+          </thead>
+          <tbody id="chains-body"></tbody>
+        </table>
+      </div>
+    </section>
+
     <section class="card readings">
       <h2 id="readings-title">What the monitor read</h2>
       <div class="table-scroll">

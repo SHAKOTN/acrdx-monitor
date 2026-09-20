@@ -51,8 +51,10 @@ function formatPrice(price) {
   return `${digits.slice(0, -18)}.${digits.slice(-18, -12)}<small>${digits.slice(-12, -8)}</small>`;
 }
 
+// The verdict of a check. With more than one chain: the worst one (the first chain on a tie).
 function findVerdict(run, checkId) {
-  return run.verdicts.find((verdict) => verdict.check === checkId);
+  return run.verdicts.filter((verdict) => verdict.check === checkId)
+    .sort((a, b) => SEVERITY.indexOf(b.result) - SEVERITY.indexOf(a.result))[0];
 }
 
 function explainAge(verdict) {
@@ -113,6 +115,7 @@ function renderSelection(history, latest) {
   renderDays(history, latest);
   renderDayScans(history, latest, shown);
   CHECKS.forEach((check) => renderCheck(check, shown, history, when));
+  renderChains(shown, when);
   renderReadings(shown, when);
 }
 
@@ -243,6 +246,30 @@ function renderChart(card, check, history, latestLimit, shownTime) {
   };
   svg.onmouseleave = () => moveCursor(shownTime);
   moveCursor(shownTime);
+}
+
+// The Spoke price of each chain next to Ethereum's. A data point, not a check: it gives no alert.
+function renderChains(run, when) {
+  byId("chains-when").textContent = `${when[0].toUpperCase()}${when.slice(1)}`;
+  const ethereum = run.readings.chains[0];
+  byId("chains-body").innerHTML = run.readings.chains.map((reading) => {
+    const verdict = run.verdicts.find((v) => v.check === "spoke_price_age" && v.chain_id === reading.chain_id);
+    let against = "—";
+    if (reading.status !== "ok") against = `<span class="read-failed">could not read</span>`;
+    else if (reading !== ethereum && !ethereum.price) against = `<span class="read-failed">Ethereum was not read</span>`;
+    else if (reading !== ethereum) {
+      const difference = BigInt(reading.price) - BigInt(ethereum.price);
+      const percent = Number((difference < 0n ? -difference : difference) * 1000000n / BigInt(ethereum.price)) / 10000;
+      against = difference === 0n ? "same price" : `differs by ${percent}%`;
+    }
+    return `<tr>
+      <td>${escapeHtml(reading.name)}</td>
+      <td class="result-${verdict.result}">${verdict.age_hours === undefined ? "—" : `${verdict.age_hours} h`}</td>
+      <td>${formatPrice(reading.price)}</td>
+      <td>${reading.computed_at ? formatTime(reading.computed_at) : "—"}</td>
+      <td>${against}</td>
+    </tr>`;
+  }).join("");
 }
 
 function renderReadings(latest, when) {
