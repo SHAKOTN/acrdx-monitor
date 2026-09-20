@@ -22,7 +22,7 @@ from checker.constants import ETHEREUM
 from checker.constants import LATEST_FILE
 from checker.constants import MODE_LIVE
 from checker.constants import MODE_REPLAY
-from checker.constants import REPLAY_DIRECTORY
+from checker.constants import REPLAY_FILE
 from checker.constants import RESULT_NO_VERDICT
 from checker.constants import RPC_TIMEOUT_SECONDS
 from checker.constants import SPOKE_ABI
@@ -55,7 +55,7 @@ def main_collector(timestamp: int | None = None) -> str:
         "overall": RESULT_NO_VERDICT,
     }
 
-    file_path = LATEST_FILE if timestamp is None else REPLAY_DIRECTORY / f"{timestamp}.json"
+    file_path = LATEST_FILE if timestamp is None else REPLAY_FILE
     file_path.parent.mkdir(parents=True, exist_ok=True)
     file_path.write_text(json.dumps(run, indent=2) + "\n")
     return str(file_path)

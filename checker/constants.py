@@ -1,3 +1,4 @@
+import tempfile
 from pathlib import Path
 
 # Chain IDs
@@ -17,10 +18,12 @@ SPOKE_ADDRESS = "0xEC3582fcDc34078a4B7a8c75a5a3AE46f48525aB"
 
 PRICE_DECIMALS = 18
 
-# Output files. Live mode writes LATEST_FILE; replay mode writes REPLAY_DIRECTORY/<timestamp>.json
+# Output files. Live mode writes LATEST_FILE; replay mode writes REPLAY_FILE, a temporary file.
+# Every judged run, live or replay, is appended to HISTORY_FILE as one JSON line.
 DATA_DIRECTORY = Path(__file__).parent.parent / "data"
 LATEST_FILE = DATA_DIRECTORY / "latest.json"
-REPLAY_DIRECTORY = DATA_DIRECTORY / "replay"
+HISTORY_FILE = DATA_DIRECTORY / "history.jsonl"
+REPLAY_FILE = Path(tempfile.gettempdir()) / "checker_replay_run.json"
 
 # Longest error text that is stored in a reading
 ERROR_TEXT_LIMIT = 300
@@ -102,6 +105,11 @@ STATUS_FAILED = "failed"
 SECONDS_IN_HOUR = 3600
 SECONDS_IN_DAY = 86400
 SATURDAY = 5  # datetime.weekday(): Monday is 0, Saturday is 5, Sunday is 6
+
+# Backfill of the history: one run every 12 hours, from 2026-08-01 00:00 UTC until now.
+# Scheduled live runs are every 15 minutes.
+BACKFILL_START_TIMESTAMP = 1785542400
+BACKFILL_STEP_SECONDS = 12 * SECONDS_IN_HOUR
 
 # Limits
 # Age of the Spoke's computedAt with weekend hours removed.

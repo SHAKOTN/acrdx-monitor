@@ -263,7 +263,7 @@ def test_main_collector_live_writes_latest_file(patch_output_files_and_clock, pa
 def test_main_collector_replay_writes_replay_file(patch_output_files_and_clock, patch_reads_ok):
     file_path = main_collector(REPLAY_TIMESTAMP)
 
-    assert file_path == str(patch_output_files_and_clock / "replay" / "1786363199.json")
+    assert file_path == str(patch_output_files_and_clock / "replay.json")
     run = json.loads(open(file_path).read())
     assert run["timestamp"] == REPLAY_TIMESTAMP
     assert run["mode"] == "replay"

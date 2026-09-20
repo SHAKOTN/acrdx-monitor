@@ -8,6 +8,7 @@ from unittest.mock import MagicMock
 import pytest
 
 from checker import chain_reader
+from checker import main as checker_main
 
 FAKE_RPC_URL = "https://rpc.invalid/secret-key"
 
@@ -138,7 +139,7 @@ def patch_rpc_down(monkeypatch):
 @pytest.fixture
 def patch_output_files_and_clock(monkeypatch, tmp_path):
     """
-    Output goes to a temporary directory. The wall clock is WALL_CLOCK. The latest block is
+    Output, the history file included, goes to a temporary directory. The wall clock is WALL_CLOCK. The latest block is
     LATEST_BLOCK. The block of any replay time is REPLAY_BLOCK.
     """
     fake_web3 = MagicMock()
@@ -148,6 +149,7 @@ def patch_output_files_and_clock(monkeypatch, tmp_path):
     )
     monkeypatch.setattr(chain_reader, "_create_web3_transport", lambda chain_id: fake_web3)
     monkeypatch.setattr(chain_reader, "LATEST_FILE", tmp_path / "latest.json")
-    monkeypatch.setattr(chain_reader, "REPLAY_DIRECTORY", tmp_path / "replay")
+    monkeypatch.setattr(chain_reader, "REPLAY_FILE", tmp_path / "replay.json")
+    monkeypatch.setattr(checker_main, "HISTORY_FILE", tmp_path / "history.jsonl")
     monkeypatch.setattr(chain_reader.time, "time", lambda: WALL_CLOCK)
     return tmp_path
