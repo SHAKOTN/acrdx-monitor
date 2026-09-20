@@ -1,74 +1,73 @@
 """
-Module for reading on chain data
+Module for reading on chain data.
+
+Every read returns a "reading" dict in the format of ../data/contract.json.
+A read never raises: on any failure it returns status "failed" with an error text
+(RPC URLs redacted) and null values.
 """
 
-from weakref import WeakKeyDictionary
+from typing import Optional
 
-from typing_extensions import Optional
+from web3 import Web3
 
 
-def main_collector(timestamp: Optional[int] = None) -> None:
+def main_collector(timestamp: Optional[int] = None) -> str:
     """
     Main collector function that reads on chain data and stores it in json format in ../data/
     Parameters:
         timestamp (Optional[int]): Timestamp to read on chain data from. If None, reads the latest time.
+    Returns:
+        str: path of the json file that was written (input of alert_judgement.judge).
     """
     # TODO:
         # Read _read_chronicle_price_per_share
-        # Read _read_spoke_price_per_share
-        # Store results in ../data/
-        # Format json output as this format:
-            # {
-            #     "timestamp": ,
-            #     "chronicle_price_per_share": ,
-            #     "chains": [
-            #         {
-            #             "chain_id": ,
-            #             "spoke_price_per_share":
-            #             "computedAt": ,
-            #         }
-            #     ]
-            # }
+        # Read _read_spoke_price_per_share for every chain in constants.CHAIN_DATA
+        # Store results in ../data/ in the format of ../data/contract.json:
+        #   run_at, timestamp, mode, readings.chronicle, readings.chains[]
+        # Live mode (timestamp is None): "timestamp" is the time of the latest Ethereum block.
 
-def _read_spoke_price_per_share(chain_id: int, timestamp: Optional[int] = None) -> [float, int]:
+def _read_spoke_price_per_share(chain_id: int, timestamp: Optional[int] = None) -> dict:
     """
-    Read the price per share of ACRDX store in the Spoke Contract.
+    Read the price per share of ACRDX stored in the Spoke Contract, and its computedAt.
 
     Args:
         chain_id (int): The chain ID of the Spoke Contract.
         timestamp (Optional[int]): Timestamp to read on chain data from. If None, reads the latest time.
 
-
     Returns:
-        float: The price per share of ACRDX.
-        int:
+        dict: a chain reading (see readings.chains[] in ../data/contract.json):
+            {"chain_id", "name", "status", "block", "price", "computed_at", "error"}
+            "price" is a string holding the raw uint128 (18 decimals), never a float.
+            status "failed": block, price and computed_at are None, "error" says why.
     """
-    # Fill in constants.py with ACRDX address (same on all chains):
-        # - Mapping of chain_id: Spoke Contract address
-        # - Mapping: chain_id: scId
-        # - Mapping: chain_id: poolId
-    # Then read the price per share from the Spoke Contract and computedAt param from
-    # markersPricePoolPerShare function
+    # Read pricePoolPerShare(poolId, scId, false) and computedAt from
+    # markersPricePoolPerShare function, both at the same block
     # function markersPricePoolPerShare(PoolId poolId, ShareClassId scId)
     #        external
     #        view
     #        returns (uint64 computedAt, uint64 maxAge, uint64 validUntil)
 
-def _read_chronicle_price_per_share(timestamp: Optional[int] = None) -> float:
+def _read_chronicle_price_per_share(timestamp: Optional[int] = None) -> dict:
     """
-    Read the price per share of ACRDX from the Chronicle contract.
+    Read the price per share of ACRDX from the Chronicle contract (read(), plain eth_call
+    at a pinned block; address(0) is on the oracle's allow-list).
+
+    Returns:
+        dict: the chronicle reading (see readings.chronicle in ../data/contract.json):
+            {"status", "block", "price", "error"}; "price" is a string, raw uint256 (18 decimals).
     """
-    # TODO: Add chronicle contract address to constants.py
-    # Read the price per share from the Chronicle contract
 
 def _create_web3_transport(chain_id: int) -> Web3:
     """
     Create a Web3 transport object.
     """
     # TODO: Install the Web3 provider and return it as a Web3 object based on the chain_id
-    # Use <CHAIN>_RPC_URL from environment variables to create the transport
+    # Use the environment variable named in constants.CHAIN_DATA[chain_id]["rpc_env"]
+    # Raises if the variable is missing; the callers turn that into a "failed" reading.
 
 def _find_adjacent_block(timestamp: int, chain_id: int) -> int:
     """
-    Find the adjacent block to the given timestamp on the given chain.
+    Find the last block at or before the given timestamp on the given chain.
+    Never returns a later block: that would read the future.
+    Raises if the chain cannot serve it; the callers turn that into a "failed" reading.
     """

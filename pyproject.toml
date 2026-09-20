@@ -7,7 +7,7 @@ name = "checker"
 version = "0.1.0"
 description = "Reads ACRDX price state from chain, makes the verdict and writes JSON for the dashboard"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = ["web3>=7"]
 
 [project.optional-dependencies]
 dev = ["pytest"]
