@@ -23,6 +23,8 @@ WALL_CLOCK = 1789901843
 # Monday 2026-08-03 00:00 UTC. SPOKE_COMPUTED_AT is Tuesday 2026-08-04 12:00 UTC
 # and REPLAY_TIMESTAMP is one second before Monday 2026-08-10 12:00 UTC.
 MONDAY_MIDNIGHT = 1785715200
+# Monday 2026-08-10 00:00 UTC: the age of SPOKE_COMPUTED_AT is exactly 84 weekday hours
+AGE_AT_LIMIT_TIMESTAMP = 1786320000
 
 
 def fake_get_block(block_identifier):

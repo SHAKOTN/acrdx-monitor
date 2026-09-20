@@ -1,6 +1,8 @@
 from checker.alert_judgement import _exclude_market_holidays_and_weekends
+from checker.alert_judgement import _judge_if_compute_at_stale
 from checker.constants import SECONDS_IN_DAY
 from checker.constants import SECONDS_IN_HOUR
+from tests.fixtures import AGE_AT_LIMIT_TIMESTAMP
 from tests.fixtures import MONDAY_MIDNIGHT
 from tests.fixtures import REPLAY_TIMESTAMP
 from tests.fixtures import SPOKE_COMPUTED_AT
@@ -31,3 +33,40 @@ def test_exclude_market_holidays_and_weekends_end_before_start():
 def test_exclude_market_holidays_and_weekends_august_event():
     # Tuesday Aug 4 12:00 -> Monday Aug 10 12:00: 144 hours on the clock, 96 without the weekend
     assert _exclude_market_holidays_and_weekends(SPOKE_COMPUTED_AT, REPLAY_TIMESTAMP + 1) == 96
+
+
+def test_judge_if_compute_at_stale_read_failed():
+    verdict = _judge_if_compute_at_stale(None, REPLAY_TIMESTAMP)
+    assert verdict == {
+        "check": "spoke_price_age",
+        "result": "no_verdict",
+        "reason": "spoke read failed",
+    }
+
+
+def test_judge_if_compute_at_stale_fresh_price():
+    verdict = _judge_if_compute_at_stale(SPOKE_COMPUTED_AT, SPOKE_COMPUTED_AT + SECONDS_IN_DAY)
+    assert verdict == {
+        "check": "spoke_price_age",
+        "result": "ok",
+        "age_hours": 24.0,
+        "limit_hours": 84,
+        "computed_at": SPOKE_COMPUTED_AT,
+    }
+
+
+def test_judge_if_compute_at_stale_exactly_at_limit():
+    verdict = _judge_if_compute_at_stale(SPOKE_COMPUTED_AT, AGE_AT_LIMIT_TIMESTAMP)
+    assert verdict["result"] == "ok"
+    assert verdict["age_hours"] == 84.0
+
+
+def test_judge_if_compute_at_stale_august_event():
+    verdict = _judge_if_compute_at_stale(SPOKE_COMPUTED_AT, REPLAY_TIMESTAMP + 1)
+    assert verdict == {
+        "check": "spoke_price_age",
+        "result": "alert",
+        "age_hours": 96.0,
+        "limit_hours": 84,
+        "computed_at": SPOKE_COMPUTED_AT,
+    }

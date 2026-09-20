@@ -50,8 +50,7 @@
         "result": "alert",
         "age_hours": 96.0,
         "limit_hours": 84,
-        "computed_at": 1785844800,
-        "since": 1786320000
+        "computed_at": 1785844800
       },
       {
         "check": "spoke_price_age",

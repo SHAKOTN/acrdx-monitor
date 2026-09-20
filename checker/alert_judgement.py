@@ -13,9 +13,14 @@ from datetime import datetime
 from datetime import timezone
 from typing import Any
 
+from checker.constants import CHECK_SPOKE_PRICE_AGE
+from checker.constants import RESULT_ALERT
+from checker.constants import RESULT_NO_VERDICT
+from checker.constants import RESULT_OK
 from checker.constants import SATURDAY
 from checker.constants import SECONDS_IN_DAY
 from checker.constants import SECONDS_IN_HOUR
+from checker.constants import SPOKE_PRICE_AGE_LIMIT_HOURS
 
 
 def judge(file_path: str) -> dict[str, Any]:
@@ -59,10 +64,22 @@ def _judge_if_compute_at_stale(
     Compares the age of computed_at at `timestamp`, weekend hours excluded,
     with SPOKE_PRICE_AGE_LIMIT_HOURS from constants.py (check id spoke_price_age).
     Returns a verdict: alert if the age is over the limit, ok if not, no_verdict if computed_at is None.
-    Fields: check, result, age_hours, limit_hours, computed_at, since | reason.
-    "since" is the moment the age crossed the limit.
+    Fields: check, result, age_hours, limit_hours, computed_at | reason.
     """
-    pass
+    if computed_at is None:
+        return {
+            "check": CHECK_SPOKE_PRICE_AGE,
+            "result": RESULT_NO_VERDICT,
+            "reason": "spoke read failed",
+        }
+    age_hours = _exclude_market_holidays_and_weekends(computed_at, timestamp)
+    return {
+        "check": CHECK_SPOKE_PRICE_AGE,
+        "result": RESULT_ALERT if age_hours > SPOKE_PRICE_AGE_LIMIT_HOURS else RESULT_OK,
+        "age_hours": round(age_hours, 2),
+        "limit_hours": SPOKE_PRICE_AGE_LIMIT_HOURS,
+        "computed_at": computed_at,
+    }
 
 def _exclude_market_holidays_and_weekends(start: int, end: int) -> float:
     """
