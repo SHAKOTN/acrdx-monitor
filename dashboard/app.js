@@ -99,6 +99,23 @@ function renderLoadError(error) {
   byId("status-detail").textContent = `The page could not load the monitor's files (${error.message}).`;
 }
 
+// The run that the scan list, the two check cards and the readings table show:
+// the selected scan, or the last scan of the selected day, or the latest run if no day is selected.
+function findShownRun(history, latest) {
+  if (selectedDay === null) return latest;
+  const runs = history.filter((run) => Math.floor(run.timestamp / 86400) === selectedDay);
+  return runs.find((run) => run.timestamp === selectedScan) ?? runs[runs.length - 1];
+}
+
+function renderSelection(history, latest) {
+  const shown = findShownRun(history, latest);
+  const when = selectedDay === null ? "latest scan" : formatTime(shown.timestamp);
+  renderDays(history, latest);
+  renderDayScans(history, latest, shown);
+  CHECKS.forEach((check) => renderCheck(check, shown, history, when));
+  renderReadings(shown, when);
+}
+
 function renderDays(history, latest) {
   const worstByDay = new Map();
   for (const run of history) {
@@ -123,25 +140,20 @@ function renderDays(history, latest) {
     if (!day) return;
     selectedDay = day === selectedDay ? null : day;
     selectedScan = null;
-    renderDays(history, latest);
+    renderSelection(history, latest);
   };
   byId("days-first").textContent = formatDay(first * 86400);
   byId("days-last").textContent = formatDay(last * 86400);
-  renderDayScans(history, latest);
 }
 
 // The scans of the selected day, one row per scan. A scan with no verdict shows its reason.
-// The readings table shows the selected scan of that day, or the latest run if no day is selected.
-function renderDayScans(history, latest) {
-  const section = byId("day-scans");
-  section.hidden = selectedDay === null;
-  if (selectedDay === null) return renderReadings(latest, "latest scan");
+function renderDayScans(history, latest, shown) {
+  byId("day-scans").hidden = selectedDay === null;
+  if (selectedDay === null) return;
   const runs = history.filter((run) => Math.floor(run.timestamp / 86400) === selectedDay);
-  const shown = runs.find((run) => run.timestamp === selectedScan) ?? runs[runs.length - 1];
-  renderReadings(shown, formatTime(shown.timestamp));
   byId("day-scans-body").onclick = (event) => {
     selectedScan = Number(event.target.closest("tr").dataset.scan);
-    renderDayScans(history, latest);
+    renderSelection(history, latest);
   };
   byId("day-scans-title").textContent = `${formatDay(selectedDay * 86400)}: ${runs.length} scans`;
   byId("day-scans-body").innerHTML = runs.map((run) => `<tr data-scan="${run.timestamp}" aria-selected="${run === shown}">
@@ -156,8 +168,8 @@ function renderDayScans(history, latest) {
   </tr>`).join("");
 }
 
-function renderCheck(check, latest, history) {
-  const verdict = findVerdict(latest, check.id);
+function renderCheck(check, shown, history, when) {
+  const verdict = findVerdict(shown, check.id);
   const card = byId(check.element);
   card.dataset.result = verdict.result;
   let body = `<p class="value">—</p><div class="meter"></div><p class="explain">${escapeHtml(verdict.reason)}</p>`;
@@ -168,15 +180,16 @@ function renderCheck(check, latest, history) {
       + `<p class="explain">${check.explain(verdict)}</p>`;
   }
   card.innerHTML = `<div class="check-head"><h2>${check.title}</h2>`
-    + `<span class="result">${RESULT_WORDS[verdict.result]}</span></div>${body}`
+    + `<span class="result">${RESULT_WORDS[verdict.result]}</span></div>`
+    + `<p class="label">${when[0].toUpperCase()}${when.slice(1)}</p>${body}`
     + `<svg class="chart" viewBox="0 0 600 170" role="img" aria-label="${check.title}, history"></svg>`
-    + `<p class="hover">Move over the chart to read one scan.</p>`;
-  renderChart(card, check, history, verdict[check.limit]);
+    + `<p class="hover"></p>`;
+  renderChart(card, check, history, verdict[check.limit], shown.timestamp);
 }
 
 // Line of the value over time. A scan with no verdict breaks the line and gets a mark on the
 // bottom axis: "could not check" is never drawn as a value.
-function renderChart(card, check, history, latestLimit) {
+function renderChart(card, check, history, latestLimit, shownTime) {
   const points = history.map((run) => ({ time: run.timestamp, verdict: findVerdict(run, check.id) }))
     .filter((point) => point.verdict);
   const limit = latestLimit ?? points.find((point) => point.verdict[check.limit])?.verdict[check.limit] ?? 0;
@@ -214,9 +227,8 @@ function renderChart(card, check, history, latestLimit) {
 
   const cursor = svg.querySelector(".cursor");
   const hover = card.querySelector(".hover");
-  svg.onmousemove = (event) => {
-    const box = svg.getBoundingClientRect();
-    const time = firstTime + ((event.clientX - box.left) / box.width * 600 - left) / (right - left) * timeSpan;
+  // The cursor rests on the shown scan. It follows the mouse over the chart and then goes back.
+  const moveCursor = (time) => {
     const nearest = points.reduce((a, b) => (Math.abs(b.time - time) < Math.abs(a.time - time) ? b : a));
     const value = nearest.verdict[check.value];
     cursor.setAttribute("x1", x(nearest.time));
@@ -225,6 +237,12 @@ function renderChart(card, check, history, latestLimit) {
     hover.textContent = `${formatTime(nearest.time)}: `
       + `${value === undefined ? nearest.verdict.reason : `${value} ${check.unit}`}, ${RESULT_WORDS[nearest.verdict.result]}`;
   };
+  svg.onmousemove = (event) => {
+    const box = svg.getBoundingClientRect();
+    moveCursor(firstTime + ((event.clientX - box.left) / box.width * 600 - left) / (right - left) * timeSpan);
+  };
+  svg.onmouseleave = () => moveCursor(shownTime);
+  moveCursor(shownTime);
 }
 
 function renderReadings(latest, when) {
@@ -252,8 +270,7 @@ async function load() {
       .sort((a, b) => a.timestamp - b.timestamp);
     const silence = Date.now() / 1000 - latest.run_at;
     renderStatus(latest, silence > STOPPED_AFTER_SECONDS ? silence : 0);
-    renderDays(history, latest);
-    CHECKS.forEach((check) => renderCheck(check, latest, history));
+    renderSelection(history, latest);
   } catch (error) {
     renderLoadError(error);
   }
