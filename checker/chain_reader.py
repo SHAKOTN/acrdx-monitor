@@ -13,6 +13,7 @@ import re
 import time
 
 from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 
 from checker.constants import CHAIN_DATA
 from checker.constants import CHRONICLE_ABI
@@ -174,7 +175,10 @@ def _create_web3_transport(chain_id: int) -> Web3:
     rpc_url = os.getenv(rpc_env)
     if not rpc_url:
         raise ValueError(f"Environment variable {rpc_env} is not set")
-    return Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": RPC_TIMEOUT_SECONDS}))
+    web3 = Web3(Web3.HTTPProvider(rpc_url, request_kwargs={"timeout": RPC_TIMEOUT_SECONDS}))
+    # Optimism blocks have a long extraData field; without this, get_block raises on them
+    web3.middleware_onion.inject(ExtraDataToPOAMiddleware, layer=0)
+    return web3
 
 
 def _find_adjacent_block(timestamp: int, chain_id: int) -> int:

@@ -33,8 +33,8 @@
           "error": null
         },
         {
-          "chain_id": 143,
-          "name": "monad",
+          "chain_id": 10,
+          "name": "optimism",
           "status": "failed",
           "block": null,
           "price": null,
@@ -54,7 +54,7 @@
       },
       {
         "check": "spoke_price_age",
-        "chain_id": 143,
+        "chain_id": 10,
         "result": "no_verdict",
         "reason": "spoke read failed: timeout after 3 tries"
       },

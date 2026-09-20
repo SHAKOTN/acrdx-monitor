@@ -1,9 +1,11 @@
 import tempfile
 from pathlib import Path
 
-# Chain IDs
+# Chain IDs. Monad (143) also has ACRDX but is not read: no archive RPC for the replay.
 ETHEREUM = 1
-MONAD = 143
+OPTIMISM = 10
+BASE = 8453
+PLUME = 98866
 
 # ACRDX share token. Same address on Ethereum, Base and Plume;
 # Optimism and Monad use 0x2fabf1c784b8583d63c00c5c9c0377d8cf1a3245.
@@ -75,6 +77,27 @@ CHAIN_DATA = {
     ETHEREUM: {
         "name": "ethereum",
         "rpc_env": "MAINNET_RPC_URL",
+        "poolId": POOL_ID,
+        "scId": SC_ID,
+        "spoke_contract": SPOKE_ADDRESS,
+    },
+    PLUME: {
+        "name": "plume",
+        "rpc_env": "PLUME_RPC_URL",
+        "poolId": POOL_ID,
+        "scId": SC_ID,
+        "spoke_contract": SPOKE_ADDRESS,
+    },
+    OPTIMISM: {
+        "name": "optimism",
+        "rpc_env": "OPTIMISM_RPC_URL",
+        "poolId": POOL_ID,
+        "scId": SC_ID,
+        "spoke_contract": SPOKE_ADDRESS,
+    },
+    BASE: {
+        "name": "base",
+        "rpc_env": "BASE_RPC_URL",
         "poolId": POOL_ID,
         "scId": SC_ID,
         "spoke_contract": SPOKE_ADDRESS,

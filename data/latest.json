@@ -1,11 +1,11 @@
 {
-  "run_at": 1789909451,
-  "timestamp": 1789909451,
+  "run_at": 1789912479,
+  "timestamp": 1789912479,
   "mode": "live",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26018902,
+      "block": 26019155,
       "price": "1022826055629480000",
       "error": null
     },
@@ -14,7 +14,34 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26018902,
+        "block": 26019155,
+        "price": "1023861879292223045",
+        "computed_at": 1789646400,
+        "error": null
+      },
+      {
+        "chain_id": 98866,
+        "name": "plume",
+        "status": "ok",
+        "block": 94462835,
+        "price": "1023861879292223045",
+        "computed_at": 1789646400,
+        "error": null
+      },
+      {
+        "chain_id": 10,
+        "name": "optimism",
+        "status": "ok",
+        "block": 157156850,
+        "price": "1023861879292223045",
+        "computed_at": 1789646400,
+        "error": null
+      },
+      {
+        "chain_id": 8453,
+        "name": "base",
+        "status": "ok",
+        "block": 51561566,
         "price": "1023861879292223045",
         "computed_at": 1789646400,
         "error": null
@@ -36,6 +63,30 @@
       "divergence_pct": 0.1012,
       "limit_pct": 0.15,
       "chain_id": 1
+    },
+    {
+      "check": "spoke_price_age",
+      "result": "ok",
+      "age_hours": 36.0,
+      "limit_hours": 84,
+      "computed_at": 1789646400,
+      "chain_id": 98866
+    },
+    {
+      "check": "spoke_price_age",
+      "result": "ok",
+      "age_hours": 36.0,
+      "limit_hours": 84,
+      "computed_at": 1789646400,
+      "chain_id": 10
+    },
+    {
+      "check": "spoke_price_age",
+      "result": "ok",
+      "age_hours": 36.0,
+      "limit_hours": 84,
+      "computed_at": 1789646400,
+      "chain_id": 8453
     }
   ],
   "overall": "ok"

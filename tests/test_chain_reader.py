@@ -2,6 +2,7 @@ import json
 
 import pytest
 from web3 import Web3
+from web3.middleware import ExtraDataToPOAMiddleware
 
 from checker import chain_reader
 from checker.chain_reader import _create_web3_transport
@@ -11,6 +12,7 @@ from checker.chain_reader import _read_chronicle_data
 from checker.chain_reader import _read_spoke_data
 from checker.chain_reader import _redact_rpc_urls
 from checker.chain_reader import main_collector
+from checker.constants import CHAIN_DATA
 from checker.constants import ERROR_TEXT_LIMIT
 from checker.constants import ETHEREUM
 from checker.constants import POOL_ID
@@ -41,6 +43,14 @@ def test_create_web3_transport_sets_request_timeout(monkeypatch):
     web3 = _create_web3_transport(ETHEREUM)
 
     assert web3.provider.get_request_kwargs()["timeout"] == RPC_TIMEOUT_SECONDS
+
+
+def test_create_web3_transport_accepts_long_extra_data(monkeypatch):
+    monkeypatch.setenv("MAINNET_RPC_URL", FAKE_RPC_URL)
+
+    web3 = _create_web3_transport(ETHEREUM)
+
+    assert ExtraDataToPOAMiddleware in list(web3.middleware_onion)
 
 
 def test_create_web3_transport_with_missing_variable(monkeypatch):
@@ -257,7 +267,7 @@ def test_main_collector_live_writes_latest_file(patch_output_files_and_clock, pa
     assert run["timestamp"] == WALL_CLOCK
     assert run["mode"] == "live"
     assert run["readings"]["chronicle"]["block"] == LATEST_BLOCK
-    assert [reading["block"] for reading in run["readings"]["chains"]] == [LATEST_BLOCK]
+    assert [reading["block"] for reading in run["readings"]["chains"]] == [LATEST_BLOCK] * len(CHAIN_DATA)
 
 
 def test_main_collector_replay_writes_replay_file(patch_output_files_and_clock, patch_reads_ok):
@@ -281,7 +291,7 @@ def test_main_collector_finds_block_once_per_chain(
 
     main_collector(REPLAY_TIMESTAMP)
 
-    assert searched == [ETHEREUM]
+    assert searched == list(CHAIN_DATA)
 
 
 def test_main_collector_is_not_judged_yet(patch_output_files_and_clock, patch_reads_ok):
