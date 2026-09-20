@@ -2,8 +2,8 @@
 // The format of a run is described in data/contract.json.
 
 const REFRESH_SECONDS = 60;
-// The monitor runs every 15 minutes. After 3 missed runs the page says "not running".
-const STOPPED_AFTER_SECONDS = 45 * 60;
+// The monitor runs every hour. After 3 missed runs the page says "not running".
+const STOPPED_AFTER_SECONDS = 3 * 60 * 60;
 const SEVERITY = ["ok", "no_verdict", "alert"];
 const RESULT_WORDS = { ok: "OK", no_verdict: "No verdict", alert: "Alert" };
 const ETHERSCAN = "https://etherscan.io/address/";
@@ -11,9 +11,9 @@ const SPOKE = "0xEC3582fcDc34078a4B7a8c75a5a3AE46f48525aB";
 const CHRONICLE = "0x9a3bF392f86acd1b1EC07d026B326302eAED7488";
 
 const CHECKS = [
-  { id: "spoke_price_age", element: "check-age", title: "Age of the Spoke price",
+  { id: "spoke_price_age", element: "check-age", title: "Time since the last price update",
     value: "age_hours", limit: "limit_hours", unit: "h", explain: explainAge },
-  { id: "spoke_chronicle_divergence", element: "check-divergence", title: "Spoke price against Chronicle",
+  { id: "spoke_chronicle_divergence", element: "check-divergence", title: "Difference between Spoke and Chronicle price",
     value: "divergence_pct", limit: "limit_pct", unit: "%", explain: explainDivergence },
 ];
 
@@ -74,19 +74,24 @@ function explainDivergence(verdict) {
   return `Compares ${sources} at the same block.`;
 }
 
-function renderStatus(latest, stoppedForSeconds) {
-  let state = latest.overall;
-  let detail = `Checked ${formatAgo(Date.now() / 1000 - latest.run_at)}, at ${formatTime(latest.timestamp)}.`;
+// The result of the shown scan. "Monitor not running" is about the latest run and wins over all.
+function renderStatus(shown, latest) {
+  const silence = Date.now() / 1000 - latest.run_at;
+  let state = shown.overall;
+  let detail = `Checked ${formatAgo(silence)}, at ${formatTime(latest.timestamp)}.`;
+  if (selectedDay !== null) {
+    detail = `Scan of ${formatTime(shown.timestamp)}. The latest scan, ${formatAgo(silence)}: ${RESULT_WORDS[latest.overall]}.`;
+  }
   if (state === "alert") {
-    const failed = CHECKS.filter((check) => findVerdict(latest, check.id)?.result === "alert");
+    const failed = CHECKS.filter((check) => findVerdict(shown, check.id)?.result === "alert");
     detail = `Over the limit: ${failed.map((check) => check.title).join("; ")}. ${detail}`;
   }
   if (state === "no_verdict") {
     detail = `The monitor could not read the chain. This is not an all-clear. ${detail}`;
   }
-  if (stoppedForSeconds) {
+  if (silence > STOPPED_AFTER_SECONDS) {
     state = "stopped";
-    detail = `The last scan was ${formatAgo(stoppedForSeconds)}. The values below are the last known ones `
+    detail = `The last scan was ${formatAgo(silence)}. The values below are the last known ones `
       + `(${RESULT_WORDS[latest.overall]}) and can be wrong now.`;
   }
   byId("status").dataset.state = state;
@@ -101,7 +106,7 @@ function renderLoadError(error) {
   byId("status-detail").textContent = `The page could not load the monitor's files (${error.message}).`;
 }
 
-// The run that the scan list, the two check cards and the readings table show:
+// The run that the status, the scan list, the check cards and the tables show:
 // the selected scan, or the last scan of the selected day, or the latest run if no day is selected.
 function findShownRun(history, latest) {
   if (selectedDay === null) return latest;
@@ -112,10 +117,10 @@ function findShownRun(history, latest) {
 function renderSelection(history, latest) {
   const shown = findShownRun(history, latest);
   const when = selectedDay === null ? "latest scan" : formatTime(shown.timestamp);
+  renderStatus(shown, latest);
   renderDays(history, latest);
   renderDayScans(history, latest, shown);
   CHECKS.forEach((check) => renderCheck(check, shown, history, when));
-  renderChains(shown, when);
   renderReadings(shown, when);
 }
 
@@ -178,7 +183,7 @@ function renderCheck(check, shown, history, when) {
   let body = `<p class="value">—</p><div class="meter"></div><p class="explain">${escapeHtml(verdict.reason)}</p>`;
   if (verdict.result !== "no_verdict") {
     const share = Math.min(100, verdict[check.value] / verdict[check.limit] * 100);
-    body = `<p class="value">${verdict[check.value]}${check.unit} <small>of ${verdict[check.limit]} ${check.unit}</small></p>`
+    body = `<p class="value">${verdict[check.value]}${check.unit} <small>limit ${verdict[check.limit]}${check.unit}</small></p>`
       + `<div class="meter"><i style="width:${share}%"></i></div>`
       + `<p class="explain">${check.explain(verdict)}</p>`;
   }
@@ -248,28 +253,12 @@ function renderChart(card, check, history, latestLimit, shownTime) {
   moveCursor(shownTime);
 }
 
-// The Spoke price of each chain next to Ethereum's. A data point, not a check: it gives no alert.
-function renderChains(run, when) {
-  byId("chains-when").textContent = `${when[0].toUpperCase()}${when.slice(1)}`;
-  const ethereum = run.readings.chains[0];
-  byId("chains-body").innerHTML = run.readings.chains.map((reading) => {
-    const verdict = run.verdicts.find((v) => v.check === "spoke_price_age" && v.chain_id === reading.chain_id);
-    let against = "—";
-    if (reading.status !== "ok") against = `<span class="read-failed">could not read</span>`;
-    else if (reading !== ethereum && !ethereum.price) against = `<span class="read-failed">Ethereum was not read</span>`;
-    else if (reading !== ethereum) {
-      const difference = BigInt(reading.price) - BigInt(ethereum.price);
-      const percent = Number((difference < 0n ? -difference : difference) * 1000000n / BigInt(ethereum.price)) / 10000;
-      against = difference === 0n ? "same price" : `differs by ${percent}%`;
-    }
-    return `<tr>
-      <td>${escapeHtml(reading.name)}</td>
-      <td class="result-${verdict.result}">${verdict.age_hours === undefined ? "—" : `${verdict.age_hours} h`}</td>
-      <td>${formatPrice(reading.price)}</td>
-      <td>${reading.computed_at ? formatTime(reading.computed_at) : "—"}</td>
-      <td>${against}</td>
-    </tr>`;
-  }).join("");
+// The Spoke price of a chain next to Ethereum's. A metric, not a check: it gives no alert.
+function compareWithEthereum(reading, ethereum) {
+  if (reading === ethereum || !reading.price || !ethereum.price) return "—";
+  const difference = BigInt(reading.price) - BigInt(ethereum.price);
+  if (difference === 0n) return "same price";
+  return `differs by ${Number((difference < 0n ? -difference : difference) * 1000000n / BigInt(ethereum.price)) / 10000}%`;
 }
 
 function renderReadings(latest, when) {
@@ -281,6 +270,7 @@ function renderReadings(latest, when) {
     <td>${reading.block ?? "—"}</td>
     <td>${formatPrice(reading.price)}</td>
     <td>${reading.computed_at ? formatTime(reading.computed_at) : "—"}</td>
+    <td>${reading.chain_id ? compareWithEthereum(reading, spokes[0]) : "—"}</td>
     <td class="read-${reading.status}">${reading.status === "ok" ? "ok" : `failed: ${escapeHtml(reading.error)}`}</td>
   </tr>`).join("");
 }
@@ -295,8 +285,6 @@ async function load() {
     const latest = await latestResponse.json();
     const history = (await historyResponse.text()).split("\n").filter(Boolean).map(JSON.parse)
       .sort((a, b) => a.timestamp - b.timestamp);
-    const silence = Date.now() / 1000 - latest.run_at;
-    renderStatus(latest, silence > STOPPED_AFTER_SECONDS ? silence : 0);
     renderSelection(history, latest);
   } catch (error) {
     renderLoadError(error);

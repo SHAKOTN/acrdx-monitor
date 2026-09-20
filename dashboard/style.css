@@ -106,8 +106,7 @@ h2 { margin: 0 0 12px; font-size: 16px; font-weight: 500; }
 .check[data-result="ok"] { --state: var(--ok); }
 .check[data-result="alert"] { --state: var(--alert); }
 .check[data-result="no_verdict"] { --state: var(--no-verdict); }
-.stale .check, .stale .chains, .stale .readings { opacity: 0.55; }
-.chains table { margin-top: 12px; }
+.stale .check, .stale .readings { opacity: 0.55; }
 
 .value { margin: 6px 0 0; font-size: 36px; line-height: 1.2; font-weight: 400; }
 .value small { font-size: 20px; color: var(--text-soft); }

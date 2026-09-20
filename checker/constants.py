@@ -130,7 +130,7 @@ SECONDS_IN_DAY = 86400
 SATURDAY = 5  # datetime.weekday(): Monday is 0, Saturday is 5, Sunday is 6
 
 # Backfill of the history: one run every 12 hours, from 2026-08-01 00:00 UTC until now.
-# Scheduled live runs are every 15 minutes.
+# Scheduled live runs are every hour.
 BACKFILL_START_TIMESTAMP = 1785542400
 BACKFILL_STEP_SECONDS = 12 * SECONDS_IN_HOUR
 
