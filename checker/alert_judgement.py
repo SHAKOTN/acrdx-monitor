@@ -9,14 +9,17 @@ judge() takes the values out of the readings and adds "chain_id" and the read er
 The judgements do not read the chain, the files or the wall clock.
 """
 
+import json
 from datetime import datetime
 from datetime import timezone
+from pathlib import Path
 from typing import Any
 
 from checker.constants import CHECK_SPOKE_PRICE_AGE
 from checker.constants import RESULT_ALERT
 from checker.constants import RESULT_NO_VERDICT
 from checker.constants import RESULT_OK
+from checker.constants import RESULT_SEVERITY
 from checker.constants import SATURDAY
 from checker.constants import SECONDS_IN_DAY
 from checker.constants import SECONDS_IN_HOUR
@@ -30,7 +33,22 @@ def judge(file_path: str) -> dict[str, Any]:
     and returns the run.
     The clock of every judgement is the "timestamp" field of the file.
     """
-    pass
+    run = json.loads(Path(file_path).read_text())
+    verdicts = []
+    for reading in run["readings"]["chains"]:
+        verdict = _judge_if_compute_at_stale(reading["computed_at"], run["timestamp"])
+        verdict["chain_id"] = reading["chain_id"]
+        if reading["error"]:
+            verdict["reason"] += f": {reading['error']}"
+        verdicts.append(verdict)
+    run["verdicts"] = verdicts
+    run["overall"] = max(
+        (verdict["result"] for verdict in verdicts),
+        key=RESULT_SEVERITY.index,
+        default=RESULT_NO_VERDICT,
+    )
+    Path(file_path).write_text(json.dumps(run, indent=2) + "\n")
+    return run
 
 def _judge_if_price_divergence(
         spoke_price: int | None,

@@ -1,11 +1,15 @@
+import json
+
 from checker.alert_judgement import _exclude_market_holidays_and_weekends
 from checker.alert_judgement import _judge_if_compute_at_stale
+from checker.alert_judgement import judge
 from checker.constants import SECONDS_IN_DAY
 from checker.constants import SECONDS_IN_HOUR
 from tests.fixtures import AGE_AT_LIMIT_TIMESTAMP
 from tests.fixtures import MONDAY_MIDNIGHT
 from tests.fixtures import REPLAY_TIMESTAMP
 from tests.fixtures import SPOKE_COMPUTED_AT
+from tests.fixtures import write_run_file
 
 
 def test_exclude_market_holidays_and_weekends_inside_one_weekday():
@@ -70,3 +74,41 @@ def test_judge_if_compute_at_stale_august_event():
         "limit_hours": 84,
         "computed_at": SPOKE_COMPUTED_AT,
     }
+
+
+def test_judge_august_event_is_alert(tmp_path):
+    file_path = write_run_file(tmp_path, REPLAY_TIMESTAMP + 1, SPOKE_COMPUTED_AT, None)
+    run = judge(file_path)
+    assert run["overall"] == "alert"
+    assert run["verdicts"] == [{
+        "check": "spoke_price_age",
+        "result": "alert",
+        "age_hours": 96.0,
+        "limit_hours": 84,
+        "computed_at": SPOKE_COMPUTED_AT,
+        "chain_id": 1,
+    }]
+
+
+def test_judge_fresh_price_is_ok(tmp_path):
+    one_day_later = SPOKE_COMPUTED_AT + SECONDS_IN_DAY
+    file_path = write_run_file(tmp_path, one_day_later, SPOKE_COMPUTED_AT, None)
+    assert judge(file_path)["overall"] == "ok"
+
+
+def test_judge_failed_read_is_no_verdict(tmp_path):
+    file_path = write_run_file(tmp_path, REPLAY_TIMESTAMP, None, "ConnectionError: <RPC_URL>")
+    run = judge(file_path)
+    assert run["overall"] == "no_verdict"
+    assert run["verdicts"] == [{
+        "check": "spoke_price_age",
+        "result": "no_verdict",
+        "reason": "spoke read failed: ConnectionError: <RPC_URL>",
+        "chain_id": 1,
+    }]
+
+
+def test_judge_writes_the_run_back_to_the_file(tmp_path):
+    file_path = write_run_file(tmp_path, REPLAY_TIMESTAMP + 1, SPOKE_COMPUTED_AT, None)
+    run = judge(file_path)
+    assert json.loads(open(file_path).read()) == run

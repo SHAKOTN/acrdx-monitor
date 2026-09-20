@@ -2,6 +2,7 @@
 Constants and fixtures for all tests. Test files hold only the tests.
 conftest.py loads this module, so every test can ask for a fixture by name.
 """
+import json
 from unittest.mock import MagicMock
 
 import pytest
@@ -25,6 +26,35 @@ WALL_CLOCK = 1789901843
 MONDAY_MIDNIGHT = 1785715200
 # Monday 2026-08-10 00:00 UTC: the age of SPOKE_COMPUTED_AT is exactly 84 weekday hours
 AGE_AT_LIMIT_TIMESTAMP = 1786320000
+
+
+def write_run_file(directory, timestamp, computed_at, error):
+    """
+    Write a run file as main_collector does, with one Ethereum reading, and return its path.
+    """
+    run = {
+        "run_at": WALL_CLOCK,
+        "timestamp": timestamp,
+        "mode": "replay",
+        "readings": {
+            "chronicle": {"status": "ok", "block": REPLAY_BLOCK, "price": str(CHRONICLE_PRICE),
+                          "error": None},
+            "chains": [{
+                "chain_id": 1,
+                "name": "ethereum",
+                "status": "failed" if error else "ok",
+                "block": None if error else REPLAY_BLOCK,
+                "price": None if error else str(SPOKE_PRICE),
+                "computed_at": computed_at,
+                "error": error,
+            }],
+        },
+        "verdicts": [],
+        "overall": "no_verdict",
+    }
+    file_path = directory / "run.json"
+    file_path.write_text(json.dumps(run))
+    return str(file_path)
 
 
 def fake_get_block(block_identifier):

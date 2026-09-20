@@ -1,12 +1,12 @@
 {
-  "run_at": 1789906419,
-  "timestamp": 1789906419,
-  "mode": "live",
+  "run_at": 1789906421,
+  "timestamp": 1786363200,
+  "mode": "replay",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26018650,
-      "price": "1022826055629480000",
+      "block": 25724454,
+      "price": "1021003405586530000",
       "error": null
     },
     "chains": [
@@ -14,9 +14,9 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26018650,
-        "price": "1023861879292223045",
-        "computed_at": 1789646400,
+        "block": 25724454,
+        "price": "1020232466949343944",
+        "computed_at": 1785844800,
         "error": null
       }
     ]
@@ -24,12 +24,12 @@
   "verdicts": [
     {
       "check": "spoke_price_age",
-      "result": "ok",
-      "age_hours": 36.0,
+      "result": "alert",
+      "age_hours": 96.0,
       "limit_hours": 84,
-      "computed_at": 1789646400,
+      "computed_at": 1785844800,
       "chain_id": 1
     }
   ],
-  "overall": "ok"
+  "overall": "alert"
 }
