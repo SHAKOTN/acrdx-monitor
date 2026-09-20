@@ -1,0 +1,72 @@
+{
+  "about": "Contract of one checker run. The chain reader writes 'readings'; the judgement adds 'verdicts' and 'overall'. Live mode writes data/latest.json (one run). Replay mode writes data/replay/<name>.json (a list of runs). The dashboard reads only these files.",
+  "rules": {
+    "timestamp": "The checked moment, unix seconds UTC. Live: time of the latest Ethereum block. Replay: the requested time. Every age is measured against this value, never against the wall clock.",
+    "run_at": "Wall clock of the run, unix seconds UTC. The dashboard shows 'monitor not running' when run_at of latest.json is too old.",
+    "mode": "live | replay",
+    "status": "ok | failed. A failed reading has null values and an error text. RPC URLs are redacted from every error.",
+    "block": "The last block at or before 'timestamp' on that chain. Never a later block.",
+    "price": "String, integer with 18 decimals. Strings, because JavaScript cannot hold these numbers exactly.",
+    "check": "spoke_price_age | spoke_chronicle_divergence | cross_chain_price_mismatch | share_supply_mismatch (ids in checker/constants.py)",
+    "result": "ok | no_verdict | alert. A check whose reading failed is no_verdict, never ok.",
+    "overall": "The worst result of all verdicts. Order: ok < no_verdict < alert."
+  },
+  "example": {
+    "run_at": 1789900000,
+    "timestamp": 1786363200,
+    "mode": "replay",
+    "readings": {
+      "chronicle": {
+        "status": "ok",
+        "block": 25724454,
+        "price": "1021003405586530000",
+        "error": null
+      },
+      "chains": [
+        {
+          "chain_id": 1,
+          "name": "ethereum",
+          "status": "ok",
+          "block": 25724454,
+          "price": "1020232466949343944",
+          "computed_at": 1785844800,
+          "error": null
+        },
+        {
+          "chain_id": 143,
+          "name": "monad",
+          "status": "failed",
+          "block": null,
+          "price": null,
+          "computed_at": null,
+          "error": "timeout after 3 tries"
+        }
+      ]
+    },
+    "verdicts": [
+      {
+        "check": "spoke_price_age",
+        "chain_id": 1,
+        "result": "alert",
+        "age_hours": 96.0,
+        "limit_hours": 84,
+        "computed_at": 1785844800,
+        "since": 1786320000
+      },
+      {
+        "check": "spoke_price_age",
+        "chain_id": 143,
+        "result": "no_verdict",
+        "reason": "spoke read failed: timeout after 3 tries"
+      },
+      {
+        "check": "spoke_chronicle_divergence",
+        "chain_id": 1,
+        "result": "ok",
+        "divergence_pct": 0.0756,
+        "limit_pct": 0.15
+      }
+    ],
+    "overall": "alert"
+  }
+}
