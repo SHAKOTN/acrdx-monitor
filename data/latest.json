@@ -1,11 +1,11 @@
 {
-  "run_at": 1790919400,
-  "timestamp": 1790919400,
+  "run_at": 1790963537,
+  "timestamp": 1790963537,
   "mode": "live",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26102590,
+      "block": 26106250,
       "price": "1019815479239550000",
       "error": null
     },
@@ -14,7 +14,7 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26102590,
+        "block": 26106250,
         "price": "1019815455082645883",
         "computed_at": 1790769600,
         "error": null
@@ -23,7 +23,7 @@
         "chain_id": 98866,
         "name": "plume",
         "status": "ok",
-        "block": 96810976,
+        "block": 96917957,
         "price": "1019815455082645883",
         "computed_at": 1790769600,
         "error": null
@@ -32,7 +32,7 @@
         "chain_id": 10,
         "name": "optimism",
         "status": "ok",
-        "block": 157660311,
+        "block": 157682380,
         "price": "1019815455082645883",
         "computed_at": 1790769600,
         "error": null
@@ -41,7 +41,7 @@
         "chain_id": 8453,
         "name": "base",
         "status": "ok",
-        "block": 52065026,
+        "block": 52087095,
         "price": "1019815455082645883",
         "computed_at": 1790769600,
         "error": null
@@ -52,7 +52,7 @@
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.61,
+      "age_hours": 53.87,
       "limit_hours": 84,
       "computed_at": 1790769600,
       "chain_id": 1
@@ -67,7 +67,7 @@
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.61,
+      "age_hours": 53.87,
       "limit_hours": 84,
       "computed_at": 1790769600,
       "chain_id": 98866
@@ -75,7 +75,7 @@
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.61,
+      "age_hours": 53.87,
       "limit_hours": 84,
       "computed_at": 1790769600,
       "chain_id": 10
@@ -83,7 +83,7 @@
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.61,
+      "age_hours": 53.87,
       "limit_hours": 84,
       "computed_at": 1790769600,
       "chain_id": 8453
