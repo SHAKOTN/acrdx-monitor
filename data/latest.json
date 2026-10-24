@@ -1,11 +1,11 @@
 {
-  "run_at": 1792816551,
-  "timestamp": 1792816551,
+  "run_at": 1792857396,
+  "timestamp": 1792857396,
   "mode": "live",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26260148,
+      "block": 26263544,
       "price": "1016854408987100000",
       "error": null
     },
@@ -14,7 +14,7 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26260148,
+        "block": 26263544,
         "price": "1016854385096848118",
         "computed_at": 1792670400,
         "error": null
@@ -23,7 +23,7 @@
         "chain_id": 98866,
         "name": "plume",
         "status": "ok",
-        "block": 101315034,
+        "block": 101417255,
         "price": "1016854385096848118",
         "computed_at": 1792670400,
         "error": null
@@ -32,7 +32,7 @@
         "chain_id": 10,
         "name": "optimism",
         "status": "ok",
-        "block": 158608887,
+        "block": 158629309,
         "price": "1016854385096848118",
         "computed_at": 1792670400,
         "error": null
@@ -41,7 +41,7 @@
         "chain_id": 8453,
         "name": "base",
         "status": "ok",
-        "block": 53013602,
+        "block": 53034024,
         "price": "1016854385096848118",
         "computed_at": 1792670400,
         "error": null
