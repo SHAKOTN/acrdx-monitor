@@ -1,12 +1,12 @@
 {
-  "run_at": 1793339268,
-  "timestamp": 1793339268,
+  "run_at": 1793383616,
+  "timestamp": 1793383616,
   "mode": "live",
   "readings": {
     "chronicle": {
       "status": "ok",
-      "block": 26303574,
-      "price": "1018901788468690000",
+      "block": 26307259,
+      "price": "1021136601242660000",
       "error": null
     },
     "chains": [
@@ -14,36 +14,36 @@
         "chain_id": 1,
         "name": "ethereum",
         "status": "ok",
-        "block": 26303574,
-        "price": "1020931544144547135",
-        "computed_at": 1793188800,
+        "block": 26307259,
+        "price": "1021136577284358526",
+        "computed_at": 1793275200,
         "error": null
       },
       {
         "chain_id": 98866,
         "name": "plume",
         "status": "ok",
-        "block": 102555566,
-        "price": "1020931544144547135",
-        "computed_at": 1793188800,
+        "block": 102662409,
+        "price": "1021136577284358526",
+        "computed_at": 1793275200,
         "error": null
       },
       {
         "chain_id": 10,
         "name": "optimism",
         "status": "ok",
-        "block": 158870245,
-        "price": "1020931544144547135",
-        "computed_at": 1793188800,
+        "block": 158892419,
+        "price": "1021136577284358526",
+        "computed_at": 1793275200,
         "error": null
       },
       {
         "chain_id": 8453,
         "name": "base",
         "status": "ok",
-        "block": 53274960,
-        "price": "1020931544144547135",
-        "computed_at": 1793188800,
+        "block": 53297134,
+        "price": "1021136577284358526",
+        "computed_at": 1793275200,
         "error": null
       }
     ]
@@ -52,42 +52,42 @@
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.8,
+      "age_hours": 30.12,
       "limit_hours": 84,
-      "computed_at": 1793188800,
+      "computed_at": 1793275200,
       "chain_id": 1
     },
     {
       "check": "spoke_chronicle_divergence",
-      "result": "alert",
-      "divergence_pct": 0.1988,
+      "result": "ok",
+      "divergence_pct": 0.0,
       "limit_pct": 0.15,
       "chain_id": 1
     },
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.8,
+      "age_hours": 30.12,
       "limit_hours": 84,
-      "computed_at": 1793188800,
+      "computed_at": 1793275200,
       "chain_id": 98866
     },
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.8,
+      "age_hours": 30.12,
       "limit_hours": 84,
-      "computed_at": 1793188800,
+      "computed_at": 1793275200,
       "chain_id": 10
     },
     {
       "check": "spoke_price_age",
       "result": "ok",
-      "age_hours": 41.8,
+      "age_hours": 30.12,
       "limit_hours": 84,
-      "computed_at": 1793188800,
+      "computed_at": 1793275200,
       "chain_id": 8453
     }
   ],
-  "overall": "alert"
+  "overall": "ok"
 }
